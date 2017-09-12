@@ -1,0 +1,9 @@
+DATA STRUCTURES
+  1. Storing variable definitions
+    - dictionary (variable name : [argument, definition])
+  2. Storing facts in the system
+    - dictionary (variable name : index to rule)
+  3. List of rules
+    - going to have to be able to look up all the rules that contain the variable
+    - can keep track of what rules led to the fact being true
+    - list of true rules
