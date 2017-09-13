@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from collections import OrderedDict
 '''
 GLOBAL VARIABLE DATA STRUCTURES
 varDef - dict of variable definitions:
@@ -10,36 +11,36 @@ facts - dict of variables that are true and the index of the rule that led
 rules - list of rules:
     [(string expr, string var), ...]
 '''
-varDef = {}
-facts = {}
+varDef = OrderedDict()
+facts = OrderedDict()
 rules = []
 
-# varDef = {
-#     'S' : ("-R", "Sam likes Ice Cream"),
-#     'V' : ("-R", "Today is Sunday"),
-#     "EAT" : ("-L", "Sam will eat ice cream"),
-# }
-# facts = {
-#     'S' : -1,
-#     'V' : -1,
-# }
-# rules = [
-#     ("S&V", "EAT"),
-]
 
 def teachVar(argument, variable, definition):
     '''
     Teach <ARG> <VAR> = <STRING>
     '''
-    global varDef;
-    varDef[variable] = (argument, definition);
+    global varDef
+    varDef[variable] = (argument, definition)
+    print(varDef)
 
 
 def teachRootVar(root_var, bool_val):
     '''
     Teach <ROOTVAR> = <BOOL>
     '''
-    pass
+    global facts
+    if varDef[root_var][0] == "-L":
+        raise Exception("Error, trying to set non-root variable")
+    if bool_val == 'true':
+        facts[root_var] = -1
+    else:
+        facts.pop(root_var, None)
+
+    # set all learned vars to false:
+    for k, v in varDef.items():
+        if v[0] == "-L":
+            facts.pop(k, None)
 
 
 def teachRule(expr, variable):
@@ -103,7 +104,6 @@ def why(expr):
 
 def main():
     pass
-
 
 if __name__ == "__main__":
     main()
