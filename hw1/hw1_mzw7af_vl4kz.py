@@ -107,7 +107,7 @@ def why(expr):
 def main():
     for line in sys.stdin:
         argArray = line.strip().split(" ")
-        
+
         if argArray[0].lower() == "teach":
             if argArray[3] == "=":
                 teachVar(argArray[1], argArray[2], line.strip().split(" = ")[1])
@@ -115,7 +115,7 @@ def main():
                 teachRootVar(argArray[1], argArray[3])
             else:
                 expression = line.strip().split(" -> ")
-                teachRule(expression[0], expression[3])
+                teachRule(expression[0], expression[1])
         elif argArray[0].lower() == "list":
             listInst()
         elif argArray[0].lower() == "learn":
