@@ -127,5 +127,6 @@ def main():
             query(argArray[1])
         elif command == "why":
             why(argArray[1])
+            
 if __name__ == "__main__":
     main()
