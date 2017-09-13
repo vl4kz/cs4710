@@ -59,28 +59,28 @@ def main():
 
     for line in sys.stdin:
         argArray = line.strip().split(" ")
+        print(argArray)
 
         if argArray[0].lower() == "teach":
             if argArray[3] == "=":
-                stringVar = ' '.join(argArray).split(" = ")[1]
-                teachVar(argArray[1], argArray[2], stringVar)
+                teachVar(argArray[1], argArray[2], line.split(" = ")[1])
                 #print(argArray[1] + " " + argArray[2] + " " + stringVar)
             elif argArray[2] == "=":
-                teachRootVar(argArray[1], argArray[len(argArray)-1])
+                teachRootVar(argArray[1], argArray[3])
                 #print(argArray[1] + " " + argArray[len(argArray)-1])
             else:
-                expression = ' '.join(argArray[1:]).split(" -> ")
-                teachRule(expression[0], expression[len(expression)-1])
+                expression = line.split(" -> ")
+                teachRule(expression[0], expression[3])
                 #print(expression[0] + " " + expression[len(expression)-1])
         elif argArray[0].lower() == "list":
             listInst()
         elif argArray[0].lower() == "learn":
             learn()
         elif argArray[0].lower() == "query":
-            query(argArray[len(argArray)-1])
+            query(argArray[1])
             #print(argArray[len(argArray)-1])
         elif argArray[0].lower() == "why":
-            why(argArray[len(argArray)-1])
+            why(argArray[1])
             #print(argArray[len(argArray)-1])
 if __name__ == "__main__":
     main()
