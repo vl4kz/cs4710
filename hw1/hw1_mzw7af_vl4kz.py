@@ -52,16 +52,14 @@ def teachRule(expr, variable):
     '''
     global rules
     expr_vars = re.split('[^a-zA-Z_]+', expr)
-
     # if variable in expression is unknown, skip this instr
     for var in expr_vars:
         if var not in varDef:
-            print(var)
             return
     # if result var is unknown or is not a learned variable, skip
-    if variable not in varDef or varDef[var][0] != "-L":
+    if variable not in varDef or varDef[variable][0] != "-L":
         return
-    rules.append(expr, variable)
+    rules.append((expr, variable))
 
 
 def listInst():
