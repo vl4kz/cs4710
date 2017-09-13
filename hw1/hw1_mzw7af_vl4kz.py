@@ -107,22 +107,25 @@ def why(expr):
 def main():
     for line in sys.stdin:
         argArray = line.strip().split(" ")
-        
-        if argArray[0].lower() == "teach":
+        command = argArray[0].lower()
+
+        if command == "teach":
             if argArray[3] == "=":
-                teachVar(argArray[1], argArray[2], line.strip().split(" = ")[1])
+                ruleDef = line.strip().split(" = ")[1]
+                teachVar(argArray[1], argArray[2], ruleDef.replace('"', ""))
             elif argArray[2] == "=":
                 teachRootVar(argArray[1], argArray[3])
             else:
-                expression = line.strip().split(" -> ")
-                teachRule(expression[0], expression[3])
-        elif argArray[0].lower() == "list":
+                expression = line.strip().split(" ", 1)
+                expVars = expression[1].split(" -> ")
+                teachRule(expVars[0], expVars[1])
+        elif command == "list":
             listInst()
-        elif argArray[0].lower() == "learn":
+        elif command == "learn":
             learn()
-        elif argArray[0].lower() == "query":
+        elif command == "query":
             query(argArray[1])
-        elif argArray[0].lower() == "why":
+        elif command == "why":
             why(argArray[1])
 if __name__ == "__main__":
     main()
