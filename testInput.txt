@@ -1,0 +1,7 @@
+Teach -R S = "Sam likes ice cream"
+Teach S = true
+Teach S -> V
+List
+Learn
+Query (S&V)
+Why (S&V)
