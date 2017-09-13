@@ -2,6 +2,7 @@
 
 import sys
 from collections import OrderedDict
+import re
 
 '''
 GLOBAL VARIABLE DATA STRUCTURES
@@ -24,7 +25,6 @@ def teachVar(argument, variable, definition):
     '''
     global varDef
     varDef[variable] = (argument, definition)
-    print(varDef)
 
 
 def teachRootVar(root_var, bool_val):
@@ -33,7 +33,8 @@ def teachRootVar(root_var, bool_val):
     '''
     global facts
     if varDef[root_var][0] == "-L":
-        raise Exception("Error, trying to set non-root variable")
+        print("Error, trying to set non-root variable")
+        return
     if bool_val == 'true':
         facts[root_var] = -1
     else:
@@ -49,7 +50,18 @@ def teachRule(expr, variable):
     '''
     Teach <EXP> -> <VAR>
     '''
-    pass
+    global rules
+    expr_vars = re.split('[^a-zA-Z_]+', expr)
+
+    # if variable in expression is unknown, skip this instr
+    for var in expr_vars:
+        if var not in varDef:
+            print(var)
+            return
+    # if result var is unknown or is not a learned variable, skip
+    if variable not in varDef or varDef[var][0] != "-L":
+        return
+    rules.append(expr, variable)
 
 
 def listInst():
@@ -124,5 +136,6 @@ def main():
             query(argArray[1])
         elif argArray[0].lower() == "why":
             why(argArray[1])
+
 if __name__ == "__main__":
     main()
