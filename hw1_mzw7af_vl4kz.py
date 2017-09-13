@@ -63,13 +63,13 @@ def main():
 
         if argArray[0].lower() == "teach":
             if argArray[3] == "=":
-                teachVar(argArray[1], argArray[2], line.split(" = ")[1])
+                teachVar(argArray[1], argArray[2], line.strip().split(" = ")[1])
                 #print(argArray[1] + " " + argArray[2] + " " + stringVar)
             elif argArray[2] == "=":
                 teachRootVar(argArray[1], argArray[3])
                 #print(argArray[1] + " " + argArray[len(argArray)-1])
             else:
-                expression = line.split(" -> ")
+                expression = line.strip().split(" -> ")
                 teachRule(expression[0], expression[3])
                 #print(expression[0] + " " + expression[len(expression)-1])
         elif argArray[0].lower() == "list":
