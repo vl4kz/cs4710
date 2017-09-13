@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
+import sys
 from collections import OrderedDict
+
 '''
 GLOBAL VARIABLE DATA STRUCTURES
 varDef - dict of variable definitions:
@@ -103,7 +105,24 @@ def why(expr):
 
 
 def main():
-    pass
-
+    for line in sys.stdin:
+        argArray = line.strip().split(" ")
+        
+        if argArray[0].lower() == "teach":
+            if argArray[3] == "=":
+                teachVar(argArray[1], argArray[2], line.strip().split(" = ")[1])
+            elif argArray[2] == "=":
+                teachRootVar(argArray[1], argArray[3])
+            else:
+                expression = line.strip().split(" -> ")
+                teachRule(expression[0], expression[3])
+        elif argArray[0].lower() == "list":
+            listInst()
+        elif argArray[0].lower() == "learn":
+            learn()
+        elif argArray[0].lower() == "query":
+            query(argArray[1])
+        elif argArray[0].lower() == "why":
+            why(argArray[1])
 if __name__ == "__main__":
     main()
