@@ -1,9 +1,36 @@
-DATA STRUCTURES
+-- DATA STRUCTURES --
   1. Storing variable definitions
     - dictionary (variable name : [argument, definition])
+    {string var : (string arg, string definition) ]}
+
   2. Storing facts in the system
     - dictionary (variable name : index to rule)
+    {string var : int index, ...}
+
   3. List of rules
     - going to have to be able to look up all the rules that contain the variable
     - can keep track of what rules led to the fact being true
     - list of true rules
+    [(string expr, string var), ...]
+
+-- IMPLEMENTING LEARN --
+Forward chaining: apply rules --> facts
+Make new facts
+Add facts to the dictionary with the index of the last rule that led them to be true
+
+Not A -> B
+
+ALGORITHM:
+  Loop through each rule
+  If new fact is learned:
+    Add fact to (dict) facts with index to rule you last learned it from
+    Loop through each rule again
+  Else:
+    End learn
+
+HARD POINTS:
+- Evaluating the expression
+  order of operations: Not, And, Or
+  parentheses
+
+    - Scan through the entire expression; look for the least used expression
