@@ -1,5 +1,8 @@
 Teach -R S = "Sam likes ice cream"
 Teach -R F = "Sam likes dogs"
+Teach -R A = "Sam is a straight A student"
 Teach -L B = "Sam is a nice person"
-Teach S&F -> B
+Teach !(S&F)|A -> B
+list
+learn
 list

@@ -52,9 +52,11 @@ def teachRule(expr, variable):
     '''
     global rules
     expr_vars = re.split('[^a-zA-Z_]+', expr)
+
+
     # if variable in expression is unknown, skip this instr
     for var in expr_vars:
-        if var not in varDef:
+        if var not in varDef and var != "":
             return
     # if result var is unknown or is not a learned variable, skip
     if variable not in varDef or varDef[variable][0] != "-L":
@@ -97,7 +99,12 @@ def learn():
     '''
     Learn
     '''
-    pass
+
+    for index, rule in enumerate(rules):
+        evalExpr(rule[0])
+
+        if evalExpr(rule[0]):
+            facts[rule[1]] = index
 
 
 def query(expr):
@@ -113,6 +120,48 @@ def why(expr):
     '''
     pass
 
+def evalExpr(expr):
+    '''
+    Evaluate an expression taking into account order of operations & parentheses
+    Order of operations: NOT, AND, OR
+    '''
+
+    if re.fullmatch('[a-zA-Z_]+', expr) is not None:
+        if expr in facts.keys():
+            return True
+        else:
+            return False
+
+    split, operator = splitExpr(expr)
+
+    if operator == "&":
+        return evalExpr(split[0]) and evalExpr(split[1])
+    elif operator == "!":
+        return not evalExpr(split[1])
+    elif operator == "|":
+        return evalExpr(split[0]) or evalExpr(split[1])
+
+def splitExpr(expr):
+    '''
+    Splits expressions based on order of operations
+    Returns array of split expression and operator the array was split on
+    '''
+    parenCount = 0
+    opList = ["|", "&", "!"]
+
+    if expr[0] == "(" and expr[len(expr)-1] == ")":
+        expr = expr[1:len(expr)-1]
+
+    for operator in opList:
+        for char in expr:
+            if char == "(":
+                parenCount += 1
+            if char == ")":
+                parenCount -= 1
+
+            if parenCount == 0 and char == operator:
+                split = expr.split(operator, 1)
+                return (split, operator)
 
 def main():
     for line in sys.stdin:
