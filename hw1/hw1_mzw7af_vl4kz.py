@@ -99,13 +99,18 @@ def learn():
     '''
     Learn
     '''
+    global facts
 
-    for index, rule in enumerate(rules):
-        evalExpr(rule[0])
+    while True:
+        factAdded = False
 
-        if evalExpr(rule[0]):
-            facts[rule[1]] = index
+        for index, rule in enumerate(rules):
+            if evalExpr(rule[0]) and rule[1] not in facts.keys():
+                factAdded = True
+                facts[rule[1]] = index
 
+        if not factAdded:
+            break
 
 def query(expr):
     '''
