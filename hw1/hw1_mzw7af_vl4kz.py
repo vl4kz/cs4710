@@ -123,7 +123,80 @@ def why(expr):
     '''
     Why <EXP>
     '''
-    pass
+    truth, explanation = whyHelper(expr)
+    if truth:
+        print("true")
+    else:
+        print("false")
+    print(explanation)
+
+
+def whyHelper(expr):
+    '''
+    Helper function for Why. Performs the same function, but also returns the text
+    detailing why the expr can/cannot be proved
+    Returns a tuple: (bool truth, string explanation)
+    '''
+    # Is expr a variable? If it is, if it is a root var than we're good. Else
+    # look for rule(s) that implies it's true
+    if re.fullmatch('[a-zA-Z_]+', expr) is not None:
+        if varDef[expr][0] == "-R":
+            truth = expr in facts.keys():
+            return (truth, printStatement('fact', truth, expr))
+        else:
+            # We know this var is true and we have link to rule that implies true
+            if expr in facts.keys():
+                possible_rules = [rules[facts[expr]]]
+            # else get all rules that imply this is true
+            else:
+                possible_rules = [r for r in rules if r[1] == expr]
+            # loop through rules and conditional is true
+            for rule in possible_rules:
+                truth, explanation = whyHelper(rule[0])
+                return (truth, printStatement('rule', truth, rule[0], rule[1]))
+
+
+def printStatement(logicType, truth, expr1, expr2=None):
+    '''
+    Helper function to print 'Why' reasoning. Takes in 3 (or 4) arguments:
+    1. logicType: a string indicating (fact, rule, conclude)
+    2. truth value (true or false)
+    3. expr1 that was proved true or false (or conditional for rule)
+    4. expr2 (if rule, then the implied expr)
+    Returns the resulting reasoning string
+    '''
+    expr1 = formatExprPrint(expr1)
+
+    if logictype == 'fact':
+        if truth:
+            return "I KNOW THAT %s\n" % expr1
+        else:
+            return "I KNOW IT IS NOT TRUE THAT %s\n" % expr1
+    if logictype == 'rule':
+        expr2 = formatExprPrint(expr2)
+        if truth:
+            return "BECAUSE %s I KNOW THAT %s" % (expr1, expr2)
+        else:
+            return "BECAUSE IT IS NOT TRUE THAT %s I CANNOT PROVE %s" % (expr1, expr2)
+    if logictype == 'conclude':
+        if truth:
+            return "I THUS KNOW THAT %s" % (expr1)
+        else:
+            return "THUS I CANNOT PROVE %s" % (expr1)
+
+def formatExprPrint(expr):
+    '''
+    Format expr to print ready form
+    '''
+    matches = re.findall('[a-zA-Z_]+', expr)
+    for var in matches:
+        expr.replace(var, varDef[var][1])
+    expr.replace('&', ' AND ')
+    expr.replace('|', ' OR ')
+    expr.replace('!', ' NOT ')
+    return expr
+
+
 
 def evalExpr(expr):
     '''
