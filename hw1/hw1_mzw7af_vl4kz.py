@@ -141,7 +141,7 @@ def whyHelper(expr):
     # look for rule(s) that implies it's true
     if re.fullmatch('[a-zA-Z_]+', expr) is not None:
         if varDef[expr][0] == "-R":
-            truth = expr in facts.keys():
+            truth = expr in facts.keys()
             return (truth, printStatement('fact', truth, expr))
         else:
             # We know this var is true and we have link to rule that implies true
@@ -158,8 +158,8 @@ def whyHelper(expr):
                     text += printStatement('rule', truth, rule[0], rule[1])
                     return (truth, text)
     # expr is an expression
-    split, operator = splitExpr(expr)
-    if split == '&':
+    split, op = splitExpr(expr)
+    if op == '&':
         truth1, exp1 = whyHelper(split[0])
         truth2, exp2 = whyHelper(split[1])
         if truth1 and truth2:
@@ -170,7 +170,7 @@ def whyHelper(expr):
         else:
             text = exp2 + printStatement('conclude', False, expr)
         return (truth1 and truth2, text)
-    elif split == '|':
+    elif op == '|':
         truth1, exp1 = whyHelper(split[0])
         truth2, exp2 = whyHelper(split[1])
         if not (truth1 or truth2):
@@ -181,7 +181,7 @@ def whyHelper(expr):
         else:
             text = exp2 + printStatement('conclude', True, expr)
         return (truth1 or truth2, text)
-    else split == '!':
+    elif op == '!':
         truth, exp = whyHelper(split[1])
         text = exp + printStatement('conclude', not truth, expr)
         return (not truth, text)
@@ -198,18 +198,18 @@ def printStatement(logicType, truth, expr1, expr2=None):
     '''
     expr1 = formatExprPrint(expr1)
 
-    if logictype == 'fact':
+    if logicType == 'fact':
         if truth:
             return "I KNOW THAT %s\n" % expr1
         else:
             return "I KNOW IT IS NOT TRUE THAT %s\n" % expr1
-    if logictype == 'rule':
+    if logicType == 'rule':
         expr2 = formatExprPrint(expr2)
         if truth:
             return "BECAUSE %s I KNOW THAT %s" % (expr1, expr2)
         else:
             return "BECAUSE IT IS NOT TRUE THAT %s I CANNOT PROVE %s" % (expr1, expr2)
-    if logictype == 'conclude':
+    if logicType == 'conclude':
         if truth:
             return "I THUS KNOW THAT %s" % (expr1)
         else:
