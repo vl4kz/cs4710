@@ -150,10 +150,14 @@ def whyHelper(expr):
             # else get all rules that imply this is true
             else:
                 possible_rules = [r for r in rules if r[1] == expr]
-            # loop through rules and conditional is true
-            for rule in possible_rules:
+            # loop through rules and return the first true rule
+            # or return the last false rule
+            for index, rule in enumerate(possible_rules):
                 truth, explanation = whyHelper(rule[0])
-                return (truth, printStatement('rule', truth, rule[0], rule[1]))
+                if truth or index == len(possible_rules) - 1:
+                    return (truth, printStatement('rule', truth, rule[0], rule[1]))
+            
+
 
 
 def printStatement(logicType, truth, expr1, expr2=None):
