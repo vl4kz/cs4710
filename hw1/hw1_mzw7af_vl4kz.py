@@ -116,25 +116,30 @@ def query(expr):
     '''
     Query <EXP>
     '''
-    pass
+    truth, _ = whyHelper(expr, set())
+    if truth:
+        print("true")
+    else:
+        print("false")
 
 
 def why(expr):
     '''
     Why <EXP>
     '''
-    truth, explanation = whyHelper(expr)
+    truth, explanation = whyHelper(expr, set())
     if truth:
         print("true")
     else:
         print("false")
-    print(explanation)
+    print(explanation.strip())
 
 
-def whyHelper(expr):
+def whyHelper(expr, ruleSet):
     '''
     Helper function for Why. Performs the same function, but also returns the text
-    detailing why the expr can/cannot be proved
+    detailing why the expr can/cannot be proved.
+    Also passes a set of rule indices that have already been used, for cycle detection
     Returns a tuple: (bool truth, string explanation)
     '''
     # expr is a variable. if it is a root var than we're good. Else
@@ -153,15 +158,19 @@ def whyHelper(expr):
             # loop through rules and return the first true rule
             # or return the last false rule
             for index, rule in enumerate(possible_rules):
-                truth, text = whyHelper(rule[0])
+                if rule in ruleSet:
+                    continue
+                truth, text = whyHelper(rule[0], ruleSet | {rule})
                 if truth or index == len(possible_rules) - 1:
                     text += printStatement('rule', truth, rule[0], rule[1])
                     return (truth, text)
+            # No rules conclude this variable is true, so return it is false
+            return (False, printStatement('fact', False, expr))
     # expr is an expression
     split, op = splitExpr(expr)
     if op == '&':
-        truth1, exp1 = whyHelper(split[0])
-        truth2, exp2 = whyHelper(split[1])
+        truth1, exp1 = whyHelper(split[0], ruleSet)
+        truth2, exp2 = whyHelper(split[1], ruleSet)
         if truth1 and truth2:
             text = exp1 + exp2 + printStatement('conclude', True, expr)
         # one of the sides is false. Show the first if both are false
@@ -171,8 +180,8 @@ def whyHelper(expr):
             text = exp2 + printStatement('conclude', False, expr)
         return (truth1 and truth2, text)
     elif op == '|':
-        truth1, exp1 = whyHelper(split[0])
-        truth2, exp2 = whyHelper(split[1])
+        truth1, exp1 = whyHelper(split[0], ruleSet)
+        truth2, exp2 = whyHelper(split[1], ruleSet)
         if not (truth1 or truth2):
             text = exp1 + exp2 + printStatement('conclude', False, expr)
         # One of the sides is true. Show the first if both are true
@@ -182,7 +191,7 @@ def whyHelper(expr):
             text = exp2 + printStatement('conclude', True, expr)
         return (truth1 or truth2, text)
     elif op == '!':
-        truth, exp = whyHelper(split[1])
+        truth, exp = whyHelper(split[1], ruleSet)
         text = exp + printStatement('conclude', not truth, expr)
         return (not truth, text)
 
@@ -197,7 +206,6 @@ def printStatement(logicType, truth, expr1, expr2=None):
     Returns the resulting reasoning string
     '''
     expr1 = formatExprPrint(expr1)
-
     if logicType == 'fact':
         if truth:
             return "I KNOW THAT %s\n" % expr1
@@ -206,26 +214,27 @@ def printStatement(logicType, truth, expr1, expr2=None):
     if logicType == 'rule':
         expr2 = formatExprPrint(expr2)
         if truth:
-            return "BECAUSE %s I KNOW THAT %s" % (expr1, expr2)
+            return "BECAUSE %s I KNOW THAT %s\n" % (expr1, expr2)
         else:
-            return "BECAUSE IT IS NOT TRUE THAT %s I CANNOT PROVE %s" % (expr1, expr2)
+            return "BECAUSE IT IS NOT TRUE THAT %s I CANNOT PROVE %s\n" % (expr1, expr2)
     if logicType == 'conclude':
         if truth:
-            return "I THUS KNOW THAT %s" % (expr1)
+            return "I THUS KNOW THAT %s\n" % (expr1)
         else:
-            return "THUS I CANNOT PROVE %s" % (expr1)
+            return "THUS I CANNOT PROVE %s\n" % (expr1)
 
 
 def formatExprPrint(expr):
     '''
     Format expr to print ready form
     '''
-    matches = re.findall('[a-zA-Z_]+', expr)
-    for var in matches:
-        expr.replace(var, varDef[var][1])
-    expr.replace('&', ' AND ')
-    expr.replace('|', ' OR ')
-    expr.replace('!', ' NOT ')
+    def matchRepl(matchobj):
+        return varDef[matchobj.group(0)][1]
+
+    expr = re.sub('[a-zA-Z_]+', matchRepl, expr)
+    expr = expr.replace('&', ' AND ')
+    expr = expr.replace('|', ' OR ')
+    expr = expr.replace('!', 'NOT ')
     return expr
 
 
@@ -256,21 +265,21 @@ def splitExpr(expr):
     Splits expressions based on order of operations
     Returns array of split expression and operator the array was split on
     '''
-    parenCount = 0
     opList = ["|", "&", "!"]
 
     if expr[0] == "(" and expr[len(expr)-1] == ")":
         expr = expr[1:len(expr)-1]
 
     for operator in opList:
-        for char in expr:
+        parenCount = 0
+        for index, char in enumerate(expr):
             if char == "(":
                 parenCount += 1
             if char == ")":
                 parenCount -= 1
 
             if parenCount == 0 and char == operator:
-                split = expr.split(operator, 1)
+                split = [expr[0:index], expr[(index+1):]]
                 return (split, operator)
 
 

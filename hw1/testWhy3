@@ -6,6 +6,6 @@ Teach -L C = "Sam is a music major"
 Teach -L D = "Sam is a weed whacker"
 Teach B&!A -> C
 Teach !(S&F)|A -> B
-list
+Teach S = true
 learn
-list
+Why !(B&F)&C

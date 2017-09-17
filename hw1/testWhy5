@@ -4,8 +4,19 @@ Teach -R A = "Sam is a straight A student"
 Teach -L B = "Sam is a nice person"
 Teach -L C = "Sam is a music major"
 Teach -L D = "Sam is a weed whacker"
-Teach B&!A -> C
-Teach !(S&F)|A -> B
-list
-learn
-list
+Why S&F
+Teach S = true
+Why S&F
+Why F&S
+Teach F = true
+Why S&F
+Teach S = false
+Teach F = false
+Why S|F
+Teach S = true
+Why S|F
+Why F|S
+Teach F = true
+Why S|F
+Why !S
+Why !A
