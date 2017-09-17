@@ -137,7 +137,7 @@ def whyHelper(expr):
     detailing why the expr can/cannot be proved
     Returns a tuple: (bool truth, string explanation)
     '''
-    # Is expr a variable? If it is, if it is a root var than we're good. Else
+    # expr is a variable. if it is a root var than we're good. Else
     # look for rule(s) that implies it's true
     if re.fullmatch('[a-zA-Z_]+', expr) is not None:
         if varDef[expr][0] == "-R":
@@ -153,11 +153,38 @@ def whyHelper(expr):
             # loop through rules and return the first true rule
             # or return the last false rule
             for index, rule in enumerate(possible_rules):
-                truth, explanation = whyHelper(rule[0])
+                truth, text = whyHelper(rule[0])
                 if truth or index == len(possible_rules) - 1:
-                    return (truth, printStatement('rule', truth, rule[0], rule[1]))
-            
-
+                    text += printStatement('rule', truth, rule[0], rule[1])
+                    return (truth, text)
+    # expr is an expression
+    split, operator = splitExpr(expr)
+    if split == '&':
+        truth1, exp1 = whyHelper(split[0])
+        truth2, exp2 = whyHelper(split[1])
+        if truth1 and truth2:
+            text = exp1 + exp2 + printStatement('conclude', True, expr)
+        # one of the sides is false. Show the first if both are false
+        elif not truth1:
+            text = exp1 + printStatement('conclude', False, expr)
+        else:
+            text = exp2 + printStatement('conclude', False, expr)
+        return (truth1 and truth2, text)
+    elif split == '|':
+        truth1, exp1 = whyHelper(split[0])
+        truth2, exp2 = whyHelper(split[1])
+        if not (truth1 or truth2):
+            text = exp1 + exp2 + printStatement('conclude', False, expr)
+        # One of the sides is true. Show the first if both are true
+        elif truth1:
+            text = exp1 + printStatement('conclude', True, expr)
+        else:
+            text = exp2 + printStatement('conclude', True, expr)
+        return (truth1 or truth2, text)
+    else split == '!':
+        truth, exp = whyHelper(split[1])
+        text = exp + printStatement('conclude', not truth, expr)
+        return (not truth, text)
 
 
 def printStatement(logicType, truth, expr1, expr2=None):
@@ -188,6 +215,7 @@ def printStatement(logicType, truth, expr1, expr2=None):
         else:
             return "THUS I CANNOT PROVE %s" % (expr1)
 
+
 def formatExprPrint(expr):
     '''
     Format expr to print ready form
@@ -199,7 +227,6 @@ def formatExprPrint(expr):
     expr.replace('|', ' OR ')
     expr.replace('!', ' NOT ')
     return expr
-
 
 
 def evalExpr(expr):
@@ -223,6 +250,7 @@ def evalExpr(expr):
     elif operator == "|":
         return evalExpr(split[0]) or evalExpr(split[1])
 
+
 def splitExpr(expr):
     '''
     Splits expressions based on order of operations
@@ -244,6 +272,7 @@ def splitExpr(expr):
             if parenCount == 0 and char == operator:
                 split = expr.split(operator, 1)
                 return (split, operator)
+
 
 def main():
     for line in sys.stdin:
@@ -268,6 +297,7 @@ def main():
             query(argArray[1])
         elif command == "why":
             why(argArray[1])
+
 
 if __name__ == "__main__":
     main()
