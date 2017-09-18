@@ -1,0 +1,17 @@
+Teach -R S = "Sam likes ice cream"
+Teach -R F = "Sam likes dogs"
+Teach -R A = "Sam is a straight A student"
+Teach -L B = "Sam is a nice person"
+Teach -L C = "Sam is a music major"
+Teach -L D = "Sam is a weed whacker"
+Teach S = true
+Teach S -> B
+Why S
+Why F
+Why B
+Learn
+Why B
+Teach F -> C
+Teach A -> C
+Why C
+Why D

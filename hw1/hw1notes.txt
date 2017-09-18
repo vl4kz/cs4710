@@ -34,3 +34,24 @@ HARD POINTS:
   parentheses
 
     - Scan through the entire expression; look for the least used expression
+
+-- TEST WHY NOTES --
+root var that's true
+root var that's false
+learned variable that's known to be true already
+learned variable of unknown state
+    - multiple rules lead to it being true
+        - one of them is true
+        - none of them are true
+    - no rules lead to it being true
+expr w/ AND
+    - both are true
+    - both are false
+    - only first is true
+    - only second is true
+expr w/ OR
+    - both are true
+    - both are false
+    - only first is true
+    - only second is true
+expr w/ NOT
