@@ -144,6 +144,7 @@ def whyHelper(expr, ruleSet):
     '''
     # expr is a variable. if it is a root var than we're good. Else
     # look for rule(s) that implies it's true
+
     if re.fullmatch('[a-zA-Z_]+', expr) is not None:
         if varDef[expr][0] == "-R":
             truth = expr in facts.keys()
@@ -244,6 +245,8 @@ def evalExpr(expr):
     Order of operations: NOT, AND, OR
     '''
 
+    expr = cleanParentheses(expr)
+
     if re.fullmatch('[a-zA-Z_]+', expr) is not None:
         if expr in facts.keys():
             return True
@@ -259,16 +262,12 @@ def evalExpr(expr):
     elif operator == "|":
         return evalExpr(split[0]) or evalExpr(split[1])
 
-
 def splitExpr(expr):
     '''
     Splits expressions based on order of operations
     Returns array of split expression and operator the array was split on
     '''
     opList = ["|", "&", "!"]
-
-    if expr[0] == "(" and expr[len(expr)-1] == ")":
-        expr = expr[1:len(expr)-1]
 
     for operator in opList:
         parenCount = 0
@@ -282,6 +281,25 @@ def splitExpr(expr):
                 split = [expr[0:index], expr[(index+1):]]
                 return (split, operator)
 
+def cleanParentheses(expr):
+    endParentheses = True
+
+    if expr[0] == "(" and expr[len(expr)-1] == ")":
+        parenCount = 0
+
+        for index, char in enumerate(expr):
+            if char == "(":
+                parenCount += 1
+            if char == ")":
+                parenCount -= 1
+
+            if parenCount == 0 and index != len(expr) - 1:
+                endParentheses = False
+
+        if endParentheses:
+            expr = expr[1:len(expr)-1]
+
+    return expr
 
 def main():
     for line in sys.stdin:
