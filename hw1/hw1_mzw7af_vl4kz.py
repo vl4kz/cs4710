@@ -145,10 +145,13 @@ def whyHelper(expr, ruleSet):
     # expr is a variable. if it is a root var than we're good. Else
     # look for rule(s) that implies it's true
 
+    origExpr = expr
+    expr = cleanParentheses(expr)
+
     if re.fullmatch('[a-zA-Z_]+', expr) is not None:
         if varDef[expr][0] == "-R":
             truth = expr in facts.keys()
-            return (truth, printStatement('fact', truth, expr))
+            return (truth, printStatement('fact', truth, origExpr))
         else:
             # We know this var is true and we have link to rule that implies true
             if expr in facts.keys():
@@ -166,34 +169,34 @@ def whyHelper(expr, ruleSet):
                     text += printStatement('rule', truth, rule[0], rule[1])
                     return (truth, text)
             # No rules conclude this variable is true, so return it is false
-            return (False, printStatement('fact', False, expr))
+            return (False, printStatement('fact', False, origExpr))
     # expr is an expression
     split, op = splitExpr(expr)
     if op == '&':
         truth1, exp1 = whyHelper(split[0], ruleSet)
         truth2, exp2 = whyHelper(split[1], ruleSet)
         if truth1 and truth2:
-            text = exp1 + exp2 + printStatement('conclude', True, expr)
+            text = exp1 + exp2 + printStatement('conclude', True, origExpr)
         # one of the sides is false. Show the first if both are false
         elif not truth1:
-            text = exp1 + printStatement('conclude', False, expr)
+            text = exp1 + printStatement('conclude', False, origExpr)
         else:
-            text = exp2 + printStatement('conclude', False, expr)
+            text = exp2 + printStatement('conclude', False, origExpr)
         return (truth1 and truth2, text)
     elif op == '|':
         truth1, exp1 = whyHelper(split[0], ruleSet)
         truth2, exp2 = whyHelper(split[1], ruleSet)
         if not (truth1 or truth2):
-            text = exp1 + exp2 + printStatement('conclude', False, expr)
+            text = exp1 + exp2 + printStatement('conclude', False, origExpr)
         # One of the sides is true. Show the first if both are true
         elif truth1:
-            text = exp1 + printStatement('conclude', True, expr)
+            text = exp1 + printStatement('conclude', True, origExpr)
         else:
-            text = exp2 + printStatement('conclude', True, expr)
+            text = exp2 + printStatement('conclude', True, origExpr)
         return (truth1 or truth2, text)
     elif op == '!':
         truth, exp = whyHelper(split[1], ruleSet)
-        text = exp + printStatement('conclude', not truth, expr)
+        text = exp + printStatement('conclude', not truth, origExpr)
         return (not truth, text)
 
 
