@@ -1,1 +1,5 @@
 We used Python 3.6 for development.
+
+Group members: 
+Victoria Li (vl4kz)
+Maurice Wong (mzw7af)

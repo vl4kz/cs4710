@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Victoria Li - vl4kz
+# Maurice Wong - mzw7af
+
 import sys
 from collections import OrderedDict
 import re

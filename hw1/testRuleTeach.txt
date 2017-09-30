@@ -1,5 +1,0 @@
-Teach -R S = "Sam likes ice cream"
-Teach -R F = "Sam likes dogs"
-Teach -L B = "Sam is a nice person"
-Teach S&F -> B
-list
