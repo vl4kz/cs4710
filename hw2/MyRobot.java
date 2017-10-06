@@ -21,6 +21,13 @@ public class MyRobot extends Robot {
     HashMap<Point, Double> gnMap; // stores g(n) -- the cost of the best path so far to point n
     HashMap<Point, Point> parentMap; // stores the parent cell of each point
 
+    public MyRobot() {
+        closedList = new ArrayList<Point>();
+        fnMap = new HashMap<Point, Double>();
+        gnMap = new HashMap<Point, Double>();
+        parentMap = new HashMap<Point, Point>();
+    }
+
     @Override
     public void travelToDestination() {
         if (isUncertain) {
@@ -29,81 +36,62 @@ public class MyRobot extends Robot {
         else {
 			// call function to deal with certainty
 
-      // INITIALIZE THE OPEN AND CLOSED LISTS
-      // instance of a new PriorityQueue where the head is points with LOWER heuristic values (less costly values)
-      openQueue = new PriorityQueue<Point>(10, new Comparator<Point>() {
-        public int compare(Point p1, Point p2) {
-          if (fnMap.getOrDefault(p1, Double.POSITIVE_INFINITY) < fnMap.getOrDefault(p2, Double.POSITIVE_INFINITY)) {
-            return -1;
-          }
-          else if (fnMap.getOrDefault(p1, Double.POSITIVE_INFINITY) > fnMap.getOrDefault(p2, Double.POSITIVE_INFINITY)) {
-            return 1;
-          }
-          else {
-            return 0;
-          }
-        }
-      }
-      );
+            // instance of a new PriorityQueue where the head is points with LOWER heuristic values (less costly values)
+            openQueue = initQueue();
 
-      closedList = new ArrayList<Point>();
-      fnMap = new HashMap<Point, Double>();
-      gnMap = new HashMap<Point, Double>();
-      parentMap = new HashMap<Point, Point>();
 
-      // PLACE THE STARTING POINT INTO THE QUEUE
-      Point startingPoint = new Point(super.getX(), super.getY());
-      openQueue.add(startingPoint);
-      fnMap.put(startingPoint, diagDistance(startingPoint, END_POS));
-      gnMap.put(startingPoint, 0.0);
+            // PLACE THE STARTING POINT INTO THE QUEUE
+            Point startingPoint = new Point(super.getX(), super.getY());
+            openQueue.add(startingPoint);
+            fnMap.put(startingPoint, diagDistance(startingPoint, END_POS));
+            gnMap.put(startingPoint, 0.0);
 
-      while (openQueue.size() != 0) {  // while the queue is not empty
-        Point currentPoint = openQueue.poll(); // continue popping off
+            while (openQueue.size() != 0) {  // while the queue is not empty
+                Point currentPoint = openQueue.poll(); // continue popping off
 
-        if (currentPoint.equals(END_POS)) {
-          findPath(parentMap, currentPoint);
-          break;
-        }
-
-        closedList.add(currentPoint);
-        // System.out.println(currentPoint);
-
-        // iterate through all possible diagonal directions for neighbors
-          for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
-            for (int colOffset = -1; colOffset <= 1; colOffset++) {
-
-              Point neighbor = new Point((int) currentPoint.getX() + rowOffset, (int) currentPoint.getY() + colOffset); // create a new possible point to move to
-
-              // System.out.println(neighbor + " " + String.valueOf(rowOffset) + " " + String.valueOf(colOffset) + " " + super.pingMap(neighbor));
-
-              if (super.pingMap(neighbor) != null && !(super.pingMap(neighbor).equals("X"))) { // check if the point is within the boundaries of the world and not a wall
-                // System.out.println(neighbor);
-
-                if (closedList.contains(neighbor)) {
-                  continue; // this point has been already evaluated
+                if (currentPoint.equals(END_POS)) {
+                    ArrayList<Point> path = findPath(parentMap, currentPoint);
+                    moveRobot(path);
+                    return;
                 }
 
-                if (!(openQueue.contains(neighbor))) { // if the neighbor is not in the openQueue
-                  openQueue.add(neighbor);
+                closedList.add(currentPoint);
+                // System.out.println(currentPoint);
+
+                // iterate through all possible diagonal directions for neighbors
+                for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                    for (int colOffset = -1; colOffset <= 1; colOffset++) {
+
+                        Point neighbor = new Point((int) currentPoint.getX() + rowOffset, (int) currentPoint.getY() + colOffset); // create a new possible point to move to
+
+                        // System.out.println(neighbor + " " + String.valueOf(rowOffset) + " " + String.valueOf(colOffset) + " " + super.pingMap(neighbor));
+
+                        if (super.pingMap(neighbor) != null && !(super.pingMap(neighbor).equals("X"))) { // check if the point is within the boundaries of the world and not a wall
+                            // System.out.println(neighbor);
+
+                            if (closedList.contains(neighbor)) {
+                                continue; // this point has been already evaluated
+                            }
+
+                            if (!(openQueue.contains(neighbor))) { // if the neighbor is not in the openQueue
+                                openQueue.add(neighbor);
+                            }
+
+                            double movementDistance = diagDistance(neighbor, currentPoint); // cost of moving from currentPoint to neighbor
+
+                            // calculate the new g(n) by adding the old value of g(n) + cost of moving points
+                            double newgn = gnMap.getOrDefault(currentPoint, Double.POSITIVE_INFINITY) + movementDistance;
+
+                            if (newgn < gnMap.getOrDefault(neighbor, Double.POSITIVE_INFINITY)) {
+                                parentMap.put(neighbor, currentPoint);
+                                gnMap.put(neighbor, newgn);
+                                double heuristicCost = diagDistance(neighbor, END_POS);
+                                fnMap.put(neighbor, gnMap.get(neighbor) + heuristicCost);
+                            }
+                        }
+                    }
                 }
-
-                double movementDistance = diagDistance(neighbor, currentPoint); // cost of moving from currentPoint to neighbor
-
-                // calculate the new g(n) by adding the old value of g(n) + cost of moving points
-                double newgn = gnMap.getOrDefault(currentPoint, Double.POSITIVE_INFINITY) + movementDistance;
-
-                if (newgn < gnMap.getOrDefault(neighbor, Double.POSITIVE_INFINITY)) {
-                  parentMap.put(neighbor, currentPoint);
-                  gnMap.put(neighbor, newgn);
-                  double heuristicCost = diagDistance(neighbor, END_POS);
-                  fnMap.put(neighbor, gnMap.get(neighbor) + heuristicCost);
-                }
-              }
             }
-          }
-      }
-
-
         }
     }
 
@@ -121,7 +109,23 @@ public class MyRobot extends Robot {
       return ADJ_COST * (dx + dy) + (DIAG_COST - 2.0 * ADJ_COST) * Math.min(dx, dy);
     }
 
-    public void findPath(HashMap<Point, Point> parentMap, Point currentPoint) {
+    public PriorityQueue<Point> initQueue() {
+        return new PriorityQueue<Point>(10, new Comparator<Point>() {
+            public int compare(Point p1, Point p2) {
+                double p1Cost = fnMap.getOrDefault(p1, Double.POSITIVE_INFINITY);
+                double p2Cost = fnMap.getOrDefault(p2, Double.POSITIVE_INFINITY);
+                if (p1Cost < p2Cost) {
+                    return -1;
+                } else if (p1Cost > p2Cost) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+    }
+
+    public ArrayList<Point> findPath(HashMap<Point, Point> parentMap, Point currentPoint) {
       ArrayList<Point> totalPath = new ArrayList<>();
       totalPath.add(currentPoint);
 
@@ -129,10 +133,27 @@ public class MyRobot extends Robot {
         currentPoint = parentMap.get(currentPoint);
         totalPath.add(currentPoint);
       }
+      Collections.reverse(totalPath);
+      return totalPath;
+    }
 
-      for (int i = totalPath.size()-1; i >= 0; i--) {
-        System.out.println(totalPath.get(i));
-      }
+    /**
+     * Moves robot along specified path. Path should be a connected sequence of points
+     * Returns true on success, else false
+     */
+    public boolean moveRobot(ArrayList<Point> path) {
+        for (Point p : path) {
+            double oldX = this.getX();
+            double oldY = this.getY();
+            this.move(p);
+
+            // Robot did not move to the next point in path - something's wrong
+            if (p.getX() != this.getX() || p.getY() != this.getY()) {
+                System.out.println("ERROR MOVING");
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void main(String[] args) {
@@ -142,7 +163,7 @@ public class MyRobot extends Robot {
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
             END_POS = myWorld.getEndPos();
-			//myWorld.createGUI(400, 400, 200); // uncomment this and create a GUI; the last parameter is delay in msecs
+			myWorld.createGUI(400, 400, 200); // uncomment this and create a GUI; the last parameter is delay in msecs
 
 
 			robot.travelToDestination();
