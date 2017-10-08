@@ -56,16 +56,11 @@ public class MyRobot extends Robot {
     }
 
     public void travelUncertain() {
-        // 1. poll until distance 6 is reached
-        // 2. Move robot to best distance
-        // 3. reset the Maps DS
         HashSet<Point> blocked = new HashSet<>(); // Points in paths we've decided won't work
         Stack<Point> totalPath = new Stack<>();
         Point startPoint = this.getMyPoint();
 
         while (true) {  // while the queue is not empty
-//            System.out.println("Current position of the robot: " + String.valueOf(this.getX()) + "," + String.valueOf(this.getY()));
-            System.out.println(openQueue.isEmpty());
             if (openQueue.isEmpty()) {
                 for (Point p : closedList) {
                     blocked.add(p);
@@ -81,7 +76,6 @@ public class MyRobot extends Robot {
             }
 
             Point currPoint = openQueue.poll(); // continue popping off
-            System.out.println(currPoint);
             if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS)) {
                 // Found best point up to 6 away, or end point
                 ArrayList<Point> path = findPath(parentMap, currPoint);
@@ -96,7 +90,6 @@ public class MyRobot extends Robot {
                 } else if (!moveSuccess){
                     // if surroundings are all blocked, move back and block this point
                     if (areNeighborsBlocked(this.getMyPoint())) {
-                        System.out.println("BACKTRACKING");
                         // call backtracking function here
                         backtrack(totalPath);
 
@@ -109,10 +102,8 @@ public class MyRobot extends Robot {
                         continue;
                     } else {
                         // else restart a* from this point
-                        System.out.println("PATH Segment: " + path);
                         initRobot();
                         startPoint = this.getMyPoint();
-                        System.out.println("YOU HIT A BLOCK; RESTART A*: " + startPoint);
                         openQueue.add(startPoint);
                         fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                         gnMap.put(startPoint, 0.0);
@@ -122,7 +113,6 @@ public class MyRobot extends Robot {
                     // Restart A* algo from the current point
                     initRobot();
                     startPoint = this.getMyPoint();
-                    System.out.println("OUTSIDE ELSE LOOP: " + startPoint);
                     openQueue.add(startPoint);
                     fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                     gnMap.put(startPoint, 0.0);
@@ -131,7 +121,6 @@ public class MyRobot extends Robot {
             }
             closedList.add(currPoint);
             processNeighbors(currPoint, true);
-            System.out.println("SIZE: " + openQueue.size());
         }
     }
 
@@ -154,14 +143,9 @@ public class MyRobot extends Robot {
     public void backtrack(Stack totalPath) {
 
         do {
-            System.out.println("HELLO");
-            System.out.println(totalPath.peek());
-            System.out.println(this.getMyPoint());
-
             blocked.add((Point) totalPath.peek());
             totalPath.pop();
             if (totalPath.empty()) {
-                System.out.println("No solutions");
                 System.exit(0);
             }
             this.move((Point) totalPath.peek());
@@ -287,7 +271,6 @@ public class MyRobot extends Robot {
             blocked.add(p);
             // Robot did not move to the next point in path - something's wrong
             if (p.getX() != this.getX() || p.getY() != this.getY()) {
-                System.out.println("ERROR MOVING");
                 break;
             }
             walked.add(p);
@@ -297,7 +280,7 @@ public class MyRobot extends Robot {
 
     public static void main(String[] args) {
         try {
-			World myWorld = new World("TestCases/myInputFile4.txt", false);
+			World myWorld = new World("TestCases/myInputFile7.txt", true);
 
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
