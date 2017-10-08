@@ -13,7 +13,8 @@ public class MyRobot extends Robot {
     public static final double DIAG_COST = 1.4142135623;
     public static final double ADJ_COST = 1.0;
     public static Point END_POS = null;
-    public static final int UNCERTAIN_DIST = 2;
+    public static final int UNCERTAIN_DIST = 5;
+    public static final double MAX_PRIORITY = 99999;
 
     ArrayList<Point> closedList;
     PriorityQueue<Point> openQueue;
@@ -81,7 +82,7 @@ public class MyRobot extends Robot {
 
             Point currPoint = openQueue.poll(); // continue popping off
             System.out.println(currPoint);
-            if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS) || areNeighborsBlocked(currPoint)) {
+            if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS)) {
                 // Found best point up to 6 away, or end point
                 ArrayList<Point> path = findPath(parentMap, currPoint);
                 ArrayList<Point> walkedSegment = moveRobot(path);
@@ -152,18 +153,18 @@ public class MyRobot extends Robot {
 
     public void backtrack(Stack totalPath) {
 
-      do {
-        System.out.println("HELLO");
-        System.out.println(totalPath.peek());
-        System.out.println(this.getMyPoint());
-        blocked.add((Point) totalPath.peek());
-        totalPath.pop();
-        this.move((Point) totalPath.peek());
-    } while (areNeighborsBlocked(this.getMyPoint()));
-      /*
-      blocked.add(totalPath.get(totalPath.size()-1));
-      totalPath.remove(totalPath.size()-1);
-      this.move(totalPath.get(totalPath.size()-1)); */
+        do {
+            System.out.println("HELLO");
+            System.out.println(totalPath.peek());
+            System.out.println(this.getMyPoint());
+            blocked.add((Point) totalPath.peek());
+            totalPath.pop();
+            this.move((Point) totalPath.peek());
+        } while (areNeighborsBlocked(this.getMyPoint()));
+        /*
+        blocked.add(totalPath.get(totalPath.size()-1));
+        totalPath.remove(totalPath.size()-1);
+        this.move(totalPath.get(totalPath.size()-1)); */
     }
 
     public Point getMyPoint() {
@@ -184,8 +185,9 @@ public class MyRobot extends Robot {
                     if (closedList.contains(neighbor) || (isX && !uncertain)) { //
                         continue; // this point has been already evaluated
                     }
-
-                    openQueue.add(neighbor);
+                    if (!openQueue.contains(neighbor)) {
+                        openQueue.add(neighbor);
+                    }
 
 
                     double movementDistance = diagDistance(neighbor, currentPoint); // cost of moving from currentPoint to neighbor
@@ -193,7 +195,7 @@ public class MyRobot extends Robot {
                     // calculate the new g(n) by adding the old value of g(n) + cost of moving points
                     double newgn;
                     if (uncertain && isX) {
-                        newgn = Double.MAX_VALUE;
+                        newgn = MAX_PRIORITY;
                     } else {
                         newgn = gnMap.getOrDefault(currentPoint, Double.MAX_VALUE) + movementDistance;
                     }
@@ -290,7 +292,7 @@ public class MyRobot extends Robot {
 
     public static void main(String[] args) {
         try {
-			World myWorld = new World("TestCases/myInputFile3.txt", true);
+			World myWorld = new World("TestCases/myInputFile4.txt", true);
 
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
