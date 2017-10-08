@@ -41,7 +41,7 @@ public class MyRobot extends Robot {
     @Override
     public void travelToDestination() {
         // PLACE THE STARTING POINT INTO THE QUEUE
-        Point startingPoint = new Point(super.getX(), super.getY());
+        Point startingPoint = this.getMyPoint();
         openQueue.add(startingPoint);
         fnMap.put(startingPoint, diagDistance(startingPoint, END_POS));
         gnMap.put(startingPoint, 0.0);
@@ -60,26 +60,28 @@ public class MyRobot extends Robot {
         // 3. reset the Maps DS
         HashSet<Point> blocked = new HashSet<>(); // Points in paths we've decided won't work
         Stack<Point> totalPath = new Stack<>();
-        Point startPoint = new Point(super.getX(), super.getY());
+        Point startPoint = this.getMyPoint();
 
         while (true) {  // while the queue is not empty
 //            System.out.println("Current position of the robot: " + String.valueOf(this.getX()) + "," + String.valueOf(this.getY()));
+            System.out.println(openQueue.isEmpty());
+            if (openQueue.isEmpty()) {
+                for (Point p : closedList) {
+                    blocked.add(p);
+                }
+                backtrack(totalPath);
 
-            if (openQueue.size() <= 0 || areNeighborsBlocked()) {
-              backtrack(totalPath);
-
-              initRobot();
-
-              startPoint = new Point(this.getX(), this.getY());
-              openQueue.add(startPoint);
-              fnMap.put(startPoint, diagDistance(startPoint, END_POS));
-              gnMap.put(startPoint, 0.0);
-              continue;
+                initRobot();
+                startPoint = this.getMyPoint();
+                openQueue.add(startPoint);
+                fnMap.put(startPoint, diagDistance(startPoint, END_POS));
+                gnMap.put(startPoint, 0.0);
+                continue;
             }
 
             Point currPoint = openQueue.poll(); // continue popping off
-
-            if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS)) {
+            System.out.println(currPoint);
+            if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS) || areNeighborsBlocked(currPoint)) {
                 // Found best point up to 6 away, or end point
                 ArrayList<Point> path = findPath(parentMap, currPoint);
                 ArrayList<Point> walkedSegment = moveRobot(path);
@@ -92,24 +94,24 @@ public class MyRobot extends Robot {
                     return;
                 } else if (!moveSuccess){
                     // if surroundings are all blocked, move back and block this point
-                    if (areNeighborsBlocked()) {
+                    if (areNeighborsBlocked(this.getMyPoint())) {
                         System.out.println("BACKTRACKING");
                         // call backtracking function here
                         backtrack(totalPath);
 
                         initRobot();
 
-                        startPoint = new Point(this.getX(), this.getY());
+                        startPoint = this.getMyPoint();
                         openQueue.add(startPoint);
                         fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                         gnMap.put(startPoint, 0.0);
                         continue;
                     } else {
                         // else restart a* from this point
+                        System.out.println("PATH Segment: " + path);
                         initRobot();
-                        startPoint = new Point(this.getX(), this.getY());
+                        startPoint = this.getMyPoint();
                         System.out.println("YOU HIT A BLOCK; RESTART A*: " + startPoint);
-
                         openQueue.add(startPoint);
                         fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                         gnMap.put(startPoint, 0.0);
@@ -118,7 +120,7 @@ public class MyRobot extends Robot {
                 } else {
                     // Restart A* algo from the current point
                     initRobot();
-                    startPoint = new Point(this.getX(), this.getY());
+                    startPoint = this.getMyPoint();
                     System.out.println("OUTSIDE ELSE LOOP: " + startPoint);
                     openQueue.add(startPoint);
                     fnMap.put(startPoint, diagDistance(startPoint, END_POS));
@@ -128,7 +130,7 @@ public class MyRobot extends Robot {
             }
             closedList.add(currPoint);
             processNeighbors(currPoint, true);
-            //System.out.println(openQueue.size());
+            System.out.println("SIZE: " + openQueue.size());
         }
     }
 
@@ -150,27 +152,32 @@ public class MyRobot extends Robot {
 
     public void backtrack(Stack totalPath) {
 
-      while (areNeighborsBlocked()) {
+      do {
         System.out.println("HELLO");
-
+        System.out.println(totalPath.peek());
+        System.out.println(this.getMyPoint());
         blocked.add((Point) totalPath.peek());
         totalPath.pop();
         this.move((Point) totalPath.peek());
-      }
+    } while (areNeighborsBlocked(this.getMyPoint()));
       /*
       blocked.add(totalPath.get(totalPath.size()-1));
       totalPath.remove(totalPath.size()-1);
       this.move(totalPath.get(totalPath.size()-1)); */
     }
 
+    public Point getMyPoint() {
+        return new Point(this.getX(), this.getY());
+    }
+
     public void processNeighbors(Point currentPoint, boolean uncertain) {
         // iterate through all possible diagonal directions for neighbors
         for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (int colOffset = -1; colOffset <= 1; colOffset++) {
-
+                if (rowOffset == 0 && colOffset == 0) {
+                    continue;
+                }
                 Point neighbor = new Point((int) currentPoint.getX() + rowOffset, (int) currentPoint.getY() + colOffset); // create a new possible point to move to
-
-                // System.out.println(neighbor + " " + String.valueOf(rowOffset) + " " + String.valueOf(colOffset) + " " + super.pingMap(neighbor));
 
                 if (super.pingMap(neighbor) != null && !blocked.contains(neighbor)) { // check if the point is within the boundaries of the world and not a wall
                     boolean isX = super.pingMap(neighbor).equals("X");
@@ -178,9 +185,8 @@ public class MyRobot extends Robot {
                         continue; // this point has been already evaluated
                     }
 
-                    if (!(openQueue.contains(neighbor))) { // if the neighbor is not in the openQueue
-                        openQueue.add(neighbor);
-                    }
+                    openQueue.add(neighbor);
+
 
                     double movementDistance = diagDistance(neighbor, currentPoint); // cost of moving from currentPoint to neighbor
 
@@ -203,10 +209,10 @@ public class MyRobot extends Robot {
         }
     }
 
-    public boolean areNeighborsBlocked() {
+    public boolean areNeighborsBlocked(Point p) {
         for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (int colOffset = -1; colOffset <= 1; colOffset++) {
-                Point test = new Point(this.getX() + rowOffset, this.getY() + colOffset);
+                Point test = new Point((int) p.getX() + rowOffset, (int) p.getY() + colOffset);
                 if (!blocked.contains(test) && super.pingMap(test) != null) {
                     return false;
                 }
@@ -270,13 +276,10 @@ public class MyRobot extends Robot {
     public ArrayList<Point> moveRobot(ArrayList<Point> path) {
         ArrayList<Point> walked = new ArrayList<>();
         for (Point p : path) {
-            double oldX = this.getX();
-            double oldY = this.getY();
             this.move(p);
             blocked.add(p);
             // Robot did not move to the next point in path - something's wrong
             if (p.getX() != this.getX() || p.getY() != this.getY()) {
-                blocked.add(new Point((int) p.getX(), (int) p.getY()));
                 System.out.println("ERROR MOVING");
                 break;
             }
