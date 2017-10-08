@@ -13,7 +13,7 @@ public class MyRobot extends Robot {
     public static final double DIAG_COST = 1.4142135623;
     public static final double ADJ_COST = 1.0;
     public static Point END_POS = null;
-    public static final int UNCERTAIN_DIST = 5;
+    public static final int UNCERTAIN_DIST = 6;
     public static final double MAX_PRIORITY = 99999;
 
     ArrayList<Point> closedList;
@@ -157,8 +157,13 @@ public class MyRobot extends Robot {
             System.out.println("HELLO");
             System.out.println(totalPath.peek());
             System.out.println(this.getMyPoint());
+
             blocked.add((Point) totalPath.peek());
             totalPath.pop();
+            if (totalPath.empty()) {
+                System.out.println("No solutions");
+                System.exit(0);
+            }
             this.move((Point) totalPath.peek());
         } while (areNeighborsBlocked(this.getMyPoint()));
         /*
@@ -292,7 +297,7 @@ public class MyRobot extends Robot {
 
     public static void main(String[] args) {
         try {
-			World myWorld = new World("TestCases/myInputFile4.txt", true);
+			World myWorld = new World("TestCases/myInputFile4.txt", false);
 
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
