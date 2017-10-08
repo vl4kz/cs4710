@@ -1,0 +1,10 @@
+We used Java 8 for development.
+
+How to run:
+- Call 'make' in command line to compile all files.
+- Call 'make run' to run files.
+- Call 'make clean' to clean all .class files.
+
+Group members:
+Victoria Li (vl4kz)
+Maurice Wong (mzw7af)

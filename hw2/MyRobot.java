@@ -280,7 +280,7 @@ public class MyRobot extends Robot {
 
     public static void main(String[] args) {
         try {
-			World myWorld = new World("TestCases/myInputFile7.txt", true);
+			World myWorld = new World("TestCases/myInputFile3.txt", true);
 
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
