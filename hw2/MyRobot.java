@@ -13,7 +13,7 @@ public class MyRobot extends Robot {
     public static final double DIAG_COST = 1.4142135623;
     public static final double ADJ_COST = 1.0;
     public static Point END_POS = null;
-    public static final int UNCERTAIN_DIST = 6;
+    public static final int UNCERTAIN_DIST = 2;
 
     ArrayList<Point> closedList;
     PriorityQueue<Point> openQueue;
@@ -59,15 +59,29 @@ public class MyRobot extends Robot {
         // 2. Move robot to best distance
         // 3. reset the Maps DS
         HashSet<Point> blocked = new HashSet<>(); // Points in paths we've decided won't work
-        ArrayList<Point> totalPath = new ArrayList<>();
+        Stack<Point> totalPath = new Stack<>();
         Point startPoint = new Point(super.getX(), super.getY());
 
-        while (openQueue.size() != 0) {  // while the queue is not empty
+        while (true) {  // while the queue is not empty
+//            System.out.println("Current position of the robot: " + String.valueOf(this.getX()) + "," + String.valueOf(this.getY()));
+
+            if (openQueue.size() <= 0 || areNeighborsBlocked()) {
+              backtrack(totalPath);
+
+              initRobot();
+
+              startPoint = new Point(this.getX(), this.getY());
+              openQueue.add(startPoint);
+              fnMap.put(startPoint, diagDistance(startPoint, END_POS));
+              gnMap.put(startPoint, 0.0);
+              continue;
+            }
+
             Point currPoint = openQueue.poll(); // continue popping off
+
             if (isDistanceGreater(UNCERTAIN_DIST, currPoint, startPoint) || currPoint.equals(END_POS)) {
                 // Found best point up to 6 away, or end point
                 ArrayList<Point> path = findPath(parentMap, currPoint);
-                System.out.println(path);
                 ArrayList<Point> walkedSegment = moveRobot(path);
                 for (Point p : walkedSegment) {
                     totalPath.add(p);
@@ -79,10 +93,10 @@ public class MyRobot extends Robot {
                 } else if (!moveSuccess){
                     // if surroundings are all blocked, move back and block this point
                     if (areNeighborsBlocked()) {
-                        System.out.println("BACKTRACKIGN");
-                        blocked.add(path.get(path.size()-1));
-                        path.remove(path.size()-1);
-                        this.move(path.get(path.size()-1));
+                        System.out.println("BACKTRACKING");
+                        // call backtracking function here
+                        backtrack(totalPath);
+
                         initRobot();
 
                         startPoint = new Point(this.getX(), this.getY());
@@ -93,8 +107,9 @@ public class MyRobot extends Robot {
                     } else {
                         // else restart a* from this point
                         initRobot();
-
                         startPoint = new Point(this.getX(), this.getY());
+                        System.out.println("YOU HIT A BLOCK; RESTART A*: " + startPoint);
+
                         openQueue.add(startPoint);
                         fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                         gnMap.put(startPoint, 0.0);
@@ -102,8 +117,9 @@ public class MyRobot extends Robot {
                     }
                 } else {
                     // Restart A* algo from the current point
-                    closedList = new ArrayList<Point>();
+                    initRobot();
                     startPoint = new Point(this.getX(), this.getY());
+                    System.out.println("OUTSIDE ELSE LOOP: " + startPoint);
                     openQueue.add(startPoint);
                     fnMap.put(startPoint, diagDistance(startPoint, END_POS));
                     gnMap.put(startPoint, 0.0);
@@ -112,6 +128,7 @@ public class MyRobot extends Robot {
             }
             closedList.add(currPoint);
             processNeighbors(currPoint, true);
+            //System.out.println(openQueue.size());
         }
     }
 
@@ -131,6 +148,21 @@ public class MyRobot extends Robot {
         }
     }
 
+    public void backtrack(Stack totalPath) {
+
+      while (areNeighborsBlocked()) {
+        System.out.println("HELLO");
+
+        blocked.add((Point) totalPath.peek());
+        totalPath.pop();
+        this.move((Point) totalPath.peek());
+      }
+      /*
+      blocked.add(totalPath.get(totalPath.size()-1));
+      totalPath.remove(totalPath.size()-1);
+      this.move(totalPath.get(totalPath.size()-1)); */
+    }
+
     public void processNeighbors(Point currentPoint, boolean uncertain) {
         // iterate through all possible diagonal directions for neighbors
         for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
@@ -142,7 +174,7 @@ public class MyRobot extends Robot {
 
                 if (super.pingMap(neighbor) != null && !blocked.contains(neighbor)) { // check if the point is within the boundaries of the world and not a wall
                     boolean isX = super.pingMap(neighbor).equals("X");
-                    if (closedList.contains(neighbor) || (isX && !uncertain)) {
+                    if (closedList.contains(neighbor) || (isX && !uncertain)) { //
                         continue; // this point has been already evaluated
                     }
 
@@ -175,7 +207,7 @@ public class MyRobot extends Robot {
         for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (int colOffset = -1; colOffset <= 1; colOffset++) {
                 Point test = new Point(this.getX() + rowOffset, this.getY() + colOffset);
-                if (!blocked.contains(test)) {
+                if (!blocked.contains(test) && super.pingMap(test) != null) {
                     return false;
                 }
             }
@@ -198,7 +230,6 @@ public class MyRobot extends Robot {
     }
 
     public boolean isDistanceGreater(int distance, Point p1, Point p2) {
-        System.out.println("Distance: " + p1 + " " + p2);
         boolean xGreater = Math.abs(p1.getX() - p2.getX()) >= distance;
         boolean yGreater = Math.abs(p1.getY() - p2.getY()) >= distance;
         return xGreater || yGreater;
@@ -261,7 +292,7 @@ public class MyRobot extends Robot {
             MyRobot robot = new MyRobot();
             robot.addToWorld(myWorld);
             END_POS = myWorld.getEndPos();
-			myWorld.createGUI(400, 400, 200); // uncomment this and create a GUI; the last parameter is delay in msecs
+			myWorld.createGUI(400, 400, 1); // uncomment this and create a GUI; the last parameter is delay in msecs
 
 
 			robot.travelToDestination();
