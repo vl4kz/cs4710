@@ -13,6 +13,7 @@ def main():
 
 def value_iter(wind_type):
     util_p = initList()
+    util_p_dirs = initList()
     iters = 0
     delta = 0
     while True:
@@ -22,13 +23,16 @@ def value_iter(wind_type):
         delta = 0
         for r in range(7):
             for c in range(7):
-                util_p[r][c] = calc_util(util, r, c, wind_type)
+                (util_p[r][c], util_p_dirs[r][c])  = calc_util(util, r, c, wind_type)
                 new_delta = abs(util_p[r][c] - util[r][c])
                 if new_delta > delta:
                     delta = new_delta
         if delta < EPSILON or iters > MAX_ITERS:
             break
     for x in util_p:
+        print(x)
+
+    for x in util_p_dirs:
         print(x)
 
 
@@ -39,14 +43,17 @@ def initList():
 def calc_util(util, r, c, wind_type):
     reward = 0 if (r, c) == GOAL else -1
     best_action_val = get_max_action(util, r, c, wind_type)
-    return reward + DISCOUNT * best_action_val
+    return (reward + DISCOUNT * best_action_val[0], best_action_val[1])
 
 
 def get_max_action(util, r, c, wind_type):
     '''
     wind_type: 0 = no wind, 1 = light wind, 2 = strong wind
+    Returns tuple of (best_action_score, direction)
     '''
     best_action = float('-inf')
+    best_r = 0
+    best_c = 0
     for r_action in [-1, 0, 1]:
         for c_action in [-1, 0, 1]:
             r_wind = 0
@@ -67,8 +74,19 @@ def get_max_action(util, r, c, wind_type):
             curr_action = util[r_new][c_new]
             if curr_action > best_action:
                 best_action = curr_action
-    return best_action
+                best_r = r_action
+                best_c = c_action
+    return (best_action, str_dir(best_r, best_c))
 
+
+def str_dir(r_dir, c_dir):
+    dirs = ["NW", "N ", "NE", "W ", ". ", "E ", "SW", "S ", "SE"]
+    count = 0
+    for r in [-1, 0, 1]:
+        for c in [-1, 0, 1]:
+            if r_dir == r and c_dir == c:
+                return dirs[count]
+            count += 1
 
 
 if __name__ == "__main__":
