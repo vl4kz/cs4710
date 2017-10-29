@@ -8,6 +8,7 @@ WIND_TYPE = 1
 def main():
     for i in range(3):
         value_iter(i)
+        print()
 
 
 def value_iter(wind_type):
