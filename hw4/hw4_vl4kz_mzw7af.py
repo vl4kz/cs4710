@@ -86,9 +86,9 @@ def costFunction(thetas, results, answers, m, K):
             doublesum += y_curr  * math.log(h_curr) + (1-y_curr) * math.log(1-h_curr)
 
     L = len(thetas) # iterate through all thetas except the last single vector one
-    for i in range(1, L-1)
-        theta_matrix_curr = thetas[i]
-        tripleSum += numpy.square(theta_matrix).sum()
+    for i in range(1, L-1):
+        theta_matrix_curr = thetas.get(i)
+        tripleSum += np.square(theta_matrix).sum()
     return (-1/m) * doubleSum + (LAMBDA/(2*m)) * tripleSum
 
 
@@ -99,16 +99,31 @@ def forwardPropagate(features, thetas):
     '''
     a_vec = features
     for theta_matrix in np.nditer(thetas):
+        print(theta_matrix)
         z_vec = theta_matrix * a_vec
         a_vec = g(z_vec)
     return a_vec
 
+
+def initializeThetas():
+    pass
+
+def getEpsilon(L_in, L_out):
+    '''
+    L_in = # of features
+    L_out = # of classes for classification
+    '''
+    return math.sqrt(6) / math.sqrt(L_in + L_out)
 
 def main():
     ingredients = getIngredients()
     cuisines = getCuisines()
     trainingSet = formatTrainingSet(cuisines, ingredients)
 
+    theta = np.matrix([-30, 20, 20])
+    inputvector = np.matrix([[1],[0],[0]])
+    thetaArray = np.array([theta])
+    print(forwardPropagate(inputvector, thetaArray))
 
 if __name__ == '__main__':
     main()
