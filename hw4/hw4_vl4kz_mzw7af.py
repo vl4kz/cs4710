@@ -5,7 +5,9 @@ import json
 
 LAMBDA = 1
 NUM_HIDDEN_LAYERS = 1
-
+NUM_FEATURES = 2398
+NUM_NEURONS_PER_LAYER = 1209
+EPSILON = 0.06987143837
 
 def getIngredients():
     with open('ingredients.json') as json_data:
@@ -81,16 +83,15 @@ def costFunction(thetas, results, answers, m, K):
     tripleSum = 0
     for i in range(1, m):
         for k in range(1, K):
-            y_curr = answers.get(i).get(k)
-            h_curr = results.get(i).get(k)
-            doublesum += y_curr  * math.log(h_curr) + (1-y_curr) * math.log(1-h_curr)
+            y_curr = answers[i][k]
+            h_curr = results[i][k]
+            doubleSum += y_curr  * np.log(h_curr) + (1-y_curr) * np.log(1-h_curr)
 
     L = len(thetas) # iterate through all thetas except the last single vector one
     for i in range(1, L-1):
-        theta_matrix_curr = thetas.get(i)
-        tripleSum += np.square(theta_matrix).sum()
+        theta_matrix_curr = thetas[i]
+        tripleSum += np.square(theta_matrix_curr).sum()
     return (-1/m) * doubleSum + (LAMBDA/(2*m)) * tripleSum
-
 
 def forwardPropagate(features, thetas):
     '''
@@ -107,25 +108,24 @@ def forwardPropagate(features, thetas):
 
 
 def initializeThetas():
-    pass
+    theta_results = []
+    theta1 = np.random.rand(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
+    theta1 = np.multiply(theta1, 2*EPSILON)
+    theta1 = np.subtract(theta1, EPSILON)
 
-def getEpsilon(L_in, L_out):
-    '''
-    L_in = # of features
-    L_out = # of classes for classification
-    '''
-    return math.sqrt(6) / math.sqrt(L_in + L_out)
+    theta2 = np.random.rand(1, 20 + 1)
+    theta2 = np.multiply(theta2, 2*EPSILON)
+    theta2 = np.subtract(theta2, EPSILON)
+
+    return [theta1, theta2]
+
 
 def main():
     ingredients = getIngredients()
     cuisines = getCuisines()
     trainingSet = formatTrainingSet(cuisines, ingredients)
+    thetas = initializeThetas()
 
-    theta_1 = np.matrix([[-30, 20, 20], [10, -20, -20]])
-    theta_2 = np.matrix([-10, 20, 20])
-    inputvector = np.matrix([[1],[0],[1]])
-    thetaArray = [theta_1, theta_2]
-    print(forwardPropagate(inputvector, thetaArray))
 
 if __name__ == '__main__':
     main()
