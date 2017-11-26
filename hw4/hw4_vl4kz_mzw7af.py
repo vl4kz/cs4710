@@ -98,10 +98,11 @@ def forwardPropagate(features, thetas):
     thetas = array of theta matrices
     '''
     a_vec = features
-    for theta_matrix in np.nditer(thetas):
-        print(theta_matrix)
+    for theta_matrix in thetas:
         z_vec = theta_matrix * a_vec
         a_vec = g(z_vec)
+        a_vec = np.insert(a_vec, 0, 1)
+        a_vec = a_vec.transpose()
     return a_vec
 
 
@@ -120,9 +121,10 @@ def main():
     cuisines = getCuisines()
     trainingSet = formatTrainingSet(cuisines, ingredients)
 
-    theta = np.matrix([-30, 20, 20])
-    inputvector = np.matrix([[1],[0],[0]])
-    thetaArray = np.array([theta])
+    theta_1 = np.matrix([[-30, 20, 20], [10, -20, -20]])
+    theta_2 = np.matrix([-10, 20, 20])
+    inputvector = np.matrix([[1],[0],[1]])
+    thetaArray = [theta_1, theta_2]
     print(forwardPropagate(inputvector, thetaArray))
 
 if __name__ == '__main__':
