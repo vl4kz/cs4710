@@ -107,13 +107,18 @@ def forwardPropagate(features, thetas):
     return a_vec
 
 
+def backwardPropagate():
+    delta1 = np.zeros(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
+    delta2 = np.zeros(20, NUM_NEURONS_PER_LAYER + 1)
+
+
 def initializeThetas():
     theta_results = []
-    theta1 = np.random.rand(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
+    theta1 = np.random.rand(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1) # theta1 x input = (1209 x 2039) * (2039 x 1) = 1209 x 1 (plus 1 from forward propogate)
     theta1 = np.multiply(theta1, 2*EPSILON)
     theta1 = np.subtract(theta1, EPSILON)
 
-    theta2 = np.random.rand(1, 20 + 1)
+    theta2 = np.random.rand(20, NUM_NEURONS_PER_LAYER + 1) # theta2 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
     theta2 = np.multiply(theta2, 2*EPSILON)
     theta2 = np.subtract(theta2, EPSILON)
 
@@ -129,3 +134,61 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+# TEST CODE
+# import os
+# import pandas as pd
+# path = 'ex2data1.txt'
+# data = pd.read_csv(path, header=None, names=['Exam 1', 'Exam 2', 'Admitted'])
+#
+# # add a ones column - this makes the matrix multiplication work out easier
+# data.insert(0, 'Ones', 1)
+#
+# # set X (training data) and y (target variable)
+# cols = data.shape[1]
+# X = data.iloc[:,0:cols-1]
+# y = data.iloc[:,cols-1:cols]
+#
+# # convert to numpy arrays and initalize the parameter array theta
+# X = list(X.values)
+# X = [np.matrix(x).transpose() for x in X]
+# Y = list(y.values)
+# print(Y)
+# y = [np.matrix(y_item).transpose() for y_item in Y]
+# theta = np.zeros(3)
+# results = [forwardPropagate(x, [theta]) for x in X]
+# #print(results)
+#
+# print(costFunction(theta, results, y, 100, 2))
+
+
+# X = [
+#     np.matrix([[1], [34.623660], [78.024693]]),
+#     np.matrix([[1], [30.286711], [43.894998]]),
+#     np.matrix([[1], [35.847409], [72.902198]]),
+#     np.matrix([[1], [60.182599], [86.308552]]),
+#     np.matrix([[1], [79.032736], [75.344376]]),
+# ]
+# y = [
+#     np.matrix([[1], [1]]),
+#     np.matrix([[1], [1]]),
+#     np.matrix([[1], [0]]),
+#     np.matrix([[1], [1]]),
+#     np.matrix([[1], [1]]),
+#
+# ]
+# theta = np.zeros(3)
+# results = [forwardPropagate(x, [theta]) for x in X]
+# print(results)
+# print(costFunction(theta, results, y, len(X), 2))
+# '''
+#
+# '''
+# theta_1 = np.matrix([[-30, 20, 20], [10, -20, -20]])
+# theta_2 = np.matrix([-10, 20, 20])
+# inputvector = np.matrix([[1],[0],[1]])
+# thetaArray = [theta_1, theta_2]
+# print(forwardPropagate(inputvector, thetaArray))
+#
