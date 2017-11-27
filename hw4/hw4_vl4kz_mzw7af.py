@@ -98,19 +98,29 @@ def forwardPropagate(features, thetas):
     features = single vector of features for a test case
     thetas = array of theta matrices
     '''
+    a_vec_list = []
     a_vec = features
+
+    a_vec_list.append(a_vec)
+
     for theta_matrix in thetas:
         z_vec = theta_matrix * a_vec
         a_vec = g(z_vec)
         a_vec = np.insert(a_vec, 0, 1)
         a_vec = a_vec.transpose()
-    return a_vec
+        a_vec_list.append(a_vec)
+
+    return a_vec_list
 
 
-def backwardPropagate():
+def backwardPropagate(trainingSet):
     delta1 = np.zeros(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
     delta2 = np.zeros(20, NUM_NEURONS_PER_LAYER + 1)
 
+    a_vec_list = forwardPropagate(trainingSet)
+    a_vec_list.insert(0, "dummy") # insert dummy variable to make it match coursera
+
+    delta_list = []
 
 def initializeThetas():
     theta_results = []
@@ -130,7 +140,6 @@ def main():
     cuisines = getCuisines()
     trainingSet = formatTrainingSet(cuisines, ingredients)
     thetas = initializeThetas()
-
 
 if __name__ == '__main__':
     main()
