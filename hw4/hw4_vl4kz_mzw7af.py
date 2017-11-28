@@ -2,8 +2,11 @@ from scipy.special import expit
 from scipy.optimize import minimize
 import math
 import numpy as np
+import pickle
+from random import shuffle
 import time
 import json
+import sys
 
 LAMBDA = 1
 NUM_HIDDEN_LAYERS = 1
@@ -11,59 +14,9 @@ NUM_FEATURES = 2398
 NUM_NEURONS_PER_LAYER = 1209
 EPSILON = 0.06987143837
 NUM_CLASSES = 20
-NUM_TRAINING_EXAMPLES = 2
-
-def getIngredients():
-    with open('ingredients.json') as json_data:
-        data = json.load(json_data)
-        ingredientsList = data["ingredients"]
-        ingredientsDict = {k: v for v, k in enumerate(ingredientsList)}
-
-    return ingredientsDict
-
-
-def getCuisines():
-    cuisineList = []
-
-    with open('training.json') as f:
-        for line in f:
-            data = json.loads(line)
-            cuisineList.append(data["cuisine"])
-
-    cuisines = np.unique(cuisineList)
-    cuisinesDict = {k: v for v, k in enumerate(cuisines)}
-
-    return cuisinesDict
-
-
-def formatTrainingSet(cuisines, ingredients):
-    ishape = (2399, 1)
-    cshape = (21, 1)
-    trainingSet = []
-
-    with open('training.json') as f:
-        for line in f:
-            ingredientMatrix = np.zeros(ishape)
-            cuisineMatrix = np.zeros(cshape)
-
-            # add in biases
-            ingredientMatrix[0] = 1
-            cuisineMatrix[0] = 1
-
-            data = json.loads(line)
-
-            for item in data["ingredients"]:
-                ingredIndex = ingredients[item]
-                ingredientMatrix[ingredIndex+1] = 1 # shift by 1 because of bias
-            cuisineIndex = cuisines[data["cuisine"]]
-            cuisineMatrix[cuisineIndex+1] = 1
-
-            trainingDict = {}
-            trainingDict['output'] = cuisineMatrix
-            trainingDict['input'] = ingredientMatrix
-            trainingSet.append(trainingDict)
-
-        return trainingSet
+K = 6
+TOTAL_NUM_TRAINING_EXAMPLES = 1794
+NUM_TRAINING_EXAMPLES = int(TOTAL_NUM_TRAINING_EXAMPLES / K)
 
 
 def g(x):
@@ -245,22 +198,32 @@ def reshape_matrices(flat_matrix):
 
 
 def main():
-    ingredients = getIngredients()
-    cuisines = getCuisines()
-    trainingSet = formatTrainingSet(cuisines, ingredients)[:NUM_TRAINING_EXAMPLES]
+    with open('split_training_set.p', 'rb') as f:
+        split_training_set = pickle.load(f)
+
+    t0 = time.time()
+    i = int(sys.argv[1])
+    curr_training_set = [x for idx, x in enumerate(split_training_set) if idx != i]
+
+    curr_training_set = [item for sublist in curr_training_set for item in sublist]
+    curr_testing_set = split_training_set[i]
+
     thetas = initializeThetas()
     # gradients = backwardPropagate(trainingSet, thetas)
-    X = [x['input'] for x in trainingSet]
-    Y = [y['output'] for y in trainingSet]
-    # results = [forwardPropagate(x, thetas)[-1] for x in X]
+    X = [x['input'] for x in curr_training_set]
+    Y = [y['output'] for y in curr_training_set]
     theta_flat = unroll_matrices(thetas)
-    t0 = time.time()
     result = minimize(costFunction, theta_flat, args=(X, Y), method='TNC', jac=True)
+    theta_results_flat = result.x.tolist()
+    theta_results_struct = reshape_matrices(theta_results_flat)
+
+    file_name = 'parameters' + str(i) + '.p'
+    with open(file_name, 'wb') as f:
+        pickle.dump({'params' : theta_results_struct, 'test' : curr_testing_set}, f)
+
     t1 = time.time()
-    with open('parameters.json', 'w') as f:
-        json.dump({'params' : result.x.tolist()}, f)
     total_time = t1-t0
-    print(str(total_time))
+    print("training time for i = " + str(i) + ": " + str(total_time))
 
 if __name__ == '__main__':
     main()
