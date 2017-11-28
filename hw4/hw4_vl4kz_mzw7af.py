@@ -254,7 +254,7 @@ def main():
     # results = [forwardPropagate(x, thetas)[-1] for x in X]
     theta_flat = unroll_matrices(thetas)
     result = minimize(costFunction, theta_flat, args=(X, Y), jac=True)
-    with open('parameters.json') as f:
+    with open('parameters.json', 'w') as f:
         json.dump({'params' : result.x}, f)
 
 
