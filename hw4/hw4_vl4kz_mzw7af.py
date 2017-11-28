@@ -204,7 +204,7 @@ def gradientChecking(thetas, gradients, results, answers):
         thetaMinus_2 = thetaMinus[len(theta_1_flat):]
         thetaMinus = [np.reshape(thetaMinus_1, thetas[0].shape), np.reshape(thetaMinus_2, thetas[1].shape)]
         gradApprox[idx] = (costFunction(thetaPlus, results, answers, 5, 20) - costFunction(thetaMinus, results, answers, 5, 20))/(2*epsilon)
-    for idx, grad in gradApprox:
+    for idx, grad in enumerate(gradApprox):
         if math.abs(grad - gradient_flat[idx]) > 1e-9:
             print(str(grad) + "   " + str(gradient_flat[idx]))
 
