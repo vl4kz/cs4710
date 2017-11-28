@@ -1,4 +1,5 @@
 from scipy.special import expit
+from scipy.optimize import minimize
 import math
 import numpy as np
 import json
@@ -8,6 +9,8 @@ NUM_HIDDEN_LAYERS = 1
 NUM_FEATURES = 2398
 NUM_NEURONS_PER_LAYER = 1209
 EPSILON = 0.06987143837
+NUM_CLASSES = 20
+NUM_TRAINING_EXAMPLES = 2
 
 def getIngredients():
     with open('ingredients.json') as json_data:
@@ -70,28 +73,40 @@ def g(x):
     return vsigmoid(x)
 
 
-def costFunction(thetas, results, answers, m, K):
+def costFunction(thetas, X, Y):
     '''
-    thetas = array of theta matrices
-    results = array of vectors (of results from neural network)
-    answers = array of vectors (of given answers))
-    m = # of training examples
-    K = # of classes
-    (assumes bias is included in the matrices given)
+    thetas = flat theta parameters
+    X = list of training inputs
+    Y = list of training answers
+    theta_struct = list of theta matrices
+    returns the cost and list of gradients
     '''
+    m = NUM_TRAINING_EXAMPLES
+    K = NUM_CLASSES
+    thetas = reshape_matrices(thetas)
+    forward_prop_results = [forwardPropagate(x, thetas) for x in X]
+    results = [x[-1] for x in forward_prop_results]
+
+    # calculate cost Function
     doubleSum = 0
     tripleSum = 0
     for i in range(1, m):
         for k in range(1, K):
-            y_curr = answers[i][k]
+            y_curr = Y[i][k]
             h_curr = results[i][k]
             doubleSum += y_curr  * np.log(h_curr) + (1-y_curr) * np.log(1-h_curr)
 
     L = len(thetas) # iterate through all thetas except the last single vector one
-    for i in range(1, L-1):
+    for i in range(L):
         theta_matrix_curr = thetas[i]
         tripleSum += np.square(theta_matrix_curr).sum()
-    return (-1/m) * doubleSum + (LAMBDA/(2*m)) * tripleSum
+    cost = (-1/m) * doubleSum + (LAMBDA/(2*m)) * tripleSum
+
+    ################### Calculate gradients ####################
+    gradients_struct = backwardPropagate(forward_prop_results, Y, thetas)
+    gradient_flat = unroll_matrices(gradients_struct)
+    return cost, gradient_flat
+
 
 def forwardPropagate(features, thetas):
     '''
@@ -113,20 +128,24 @@ def forwardPropagate(features, thetas):
     return a_vec_list
 
 
-def backwardPropagate(trainingSet, thetas):
+def backwardPropagate(forward_prop_results, answers, thetas):
     '''
     Perform back propagation on a training Set (inputs and outputs)
     and thetas matrices
+    forward_prop_results = list of a_vec_lists from performing forward propogate at each layers
+    answers = answers from training set
+    thetas = theta structs matrices
     Returns a matrix of deltas (for the cost function gradient descent)
     '''
     delta1 = np.zeros((NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1))
-    delta2 = np.zeros((20, NUM_NEURONS_PER_LAYER + 1))
-    for training_example in trainingSet:
-        a_vec_list = forwardPropagate(training_example['input'], thetas)
+    delta2 = np.zeros((NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1))
+
+    for idx in range(NUM_TRAINING_EXAMPLES):
+        a_vec_list = forward_prop_results[idx]
         L = len(a_vec_list)
         a_vec_list.insert(0, "dummy") # insert dummy variable to make it match coursera
         delta_list = [[] for x in range(len(a_vec_list))]
-        delta_list[L] = (a_vec_list[L]- training_example['output'])[1:]
+        delta_list[L] = (a_vec_list[L]- answers[idx])[1:]
 
         #compute delta l-1 => 2
         for l in range(L-1, 1, -1): #for one hidden layer, only does one iteration lolz
@@ -141,7 +160,7 @@ def backwardPropagate(trainingSet, thetas):
         a_2_transpose = a_vec_list[2].transpose()
         delta1 = delta1 + (delta_list[2] * a_1_transpose)
         delta2 = delta2 + (delta_list[3] * a_2_transpose)
-    m = len(trainingSet)
+    m = NUM_TRAINING_EXAMPLES
     theta1 = thetas[0]
     theta2 = thetas[1]
 
@@ -154,7 +173,7 @@ def backwardPropagate(trainingSet, thetas):
                 delta1[i, j] = (1/m) * (delta1[i, j] + LAMBDA * theta1[i, j])
 
     # FINAL DELTA 2 CALCULATIONS
-    for i in range(20):
+    for i in range(NUM_CLASSES):
         for j in range(NUM_NEURONS_PER_LAYER + 1):
             if j == 0:
                 delta2[i, j] = (1/m) * (delta2[i, j])
@@ -170,7 +189,7 @@ def initializeThetas():
     theta1 = np.subtract(theta1, EPSILON)
     theta1 = np.asmatrix(theta1)
 
-    theta2 = np.random.rand(20, NUM_NEURONS_PER_LAYER + 1) # theta2 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
+    theta2 = np.random.rand(NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1) # theta2 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
     theta2 = np.multiply(theta2, 2*EPSILON)
     theta2 = np.subtract(theta2, EPSILON)
     theta2 = np.asmatrix(theta2)
@@ -203,21 +222,39 @@ def gradientChecking(thetas, gradients, results, answers):
         thetaMinus_1 = thetaMinus[:len(theta_1_flat)]
         thetaMinus_2 = thetaMinus[len(theta_1_flat):]
         thetaMinus = [np.reshape(thetaMinus_1, thetas[0].shape), np.reshape(thetaMinus_2, thetas[1].shape)]
-        gradApprox[idx] = (costFunction(thetaPlus, results, answers, 5, 20) - costFunction(thetaMinus, results, answers, 5, 20))/(2*epsilon)
+        gradApprox[idx] = (costFunction(thetaPlus, results, answers) - costFunction(thetaMinus, results, answers))/(2*epsilon)
     for idx, grad in gradApprox:
         if math.abs(grad - gradient_flat[idx]) > 1e-9:
             print(str(grad) + "   " + str(gradient_flat[idx]))
 
+
+def unroll_matrices(matrix_list):
+    flat_list = [np.hstack(matrix).flat for matrix in matrix_list]
+    return np.concatenate(flat_list)
+
+
+def reshape_matrices(flat_matrix):
+    theta_1_len = NUM_NEURONS_PER_LAYER * (NUM_FEATURES + 1)
+    theta_1 = flat_matrix[:theta_1_len]
+    theta_2 = flat_matrix[theta_1_len:]
+    theta_1_shape = (NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
+    theta_2_shape = (NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1)
+    return [np.asmatrix(np.reshape(theta_1, theta_1_shape)), np.asmatrix(np.reshape(theta_2, theta_2_shape))]
+
+
 def main():
     ingredients = getIngredients()
     cuisines = getCuisines()
-    trainingSet = formatTrainingSet(cuisines, ingredients)[:5]
+    trainingSet = formatTrainingSet(cuisines, ingredients)[:NUM_TRAINING_EXAMPLES]
     thetas = initializeThetas()
-    gradients = backwardPropagate(trainingSet, thetas)
+    # gradients = backwardPropagate(trainingSet, thetas)
     X = [x['input'] for x in trainingSet]
     Y = [y['output'] for y in trainingSet]
-    results = [forwardPropagate(x, thetas)[-1] for x in X]
-    gradientChecking(thetas, gradients, results, Y)
+    # results = [forwardPropagate(x, thetas)[-1] for x in X]
+    theta_flat = unroll_matrices(thetas)
+    result = minimize(costFunction, theta_flat, args=(X, Y), jac=True)
+    with open('parameters.json') as f:
+        json.dump({'params' : result.x}, f)
 
 
 if __name__ == '__main__':
