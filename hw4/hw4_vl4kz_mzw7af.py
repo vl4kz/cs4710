@@ -2,6 +2,7 @@ from scipy.special import expit
 from scipy.optimize import minimize
 import math
 import numpy as np
+import time
 import json
 
 LAMBDA = 1
@@ -253,10 +254,13 @@ def main():
     Y = [y['output'] for y in trainingSet]
     # results = [forwardPropagate(x, thetas)[-1] for x in X]
     theta_flat = unroll_matrices(thetas)
-    result = minimize(costFunction, theta_flat, args=(X, Y), jac=True)
+    t0 = time.time()
+    result = minimize(costFunction, theta_flat, args=(X, Y), method='TNC', jac=True)
+    t1 = time.time()
     with open('parameters.json', 'w') as f:
-        json.dump({'params' : result.x}, f)
-
+        json.dump({'params' : result.x.tolist()}, f)
+    total_time = t1-t0
+    print(str(total_time))
 
 if __name__ == '__main__':
     main()
