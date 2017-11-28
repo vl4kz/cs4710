@@ -59,7 +59,7 @@ def formatTrainingSet(cuisines, ingredients):
             trainingDict['input'] = ingredientMatrix
             trainingSet.append(trainingDict)
 
-            return trainingSet
+        return trainingSet
 
 
 def g(x):
@@ -113,33 +113,91 @@ def forwardPropagate(features, thetas):
     return a_vec_list
 
 
-def backwardPropagate(trainingSet):
-    delta1 = np.zeros(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
-    delta2 = np.zeros(20, NUM_NEURONS_PER_LAYER + 1)
+def backwardPropagate(trainingSet, thetas):
+    '''
+    Perform back propagation on a training Set (inputs and outputs)
+    and thetas matrices
+    Returns a matrix of deltas (for the cost function gradient descent)
+    '''
+    delta1 = np.zeros((NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1))
+    delta2 = np.zeros((20, NUM_NEURONS_PER_LAYER + 1))
+    for training_example in trainingSet:
+        a_vec_list = forwardPropagate(training_example['input'], thetas)
+        L = len(a_vec_list)
+        a_vec_list.insert(0, "dummy") # insert dummy variable to make it match coursera
+        delta_list = [[] for x in range(len(a_vec_list))]
+        delta_list[L] = (a_vec_list[L]- training_example['output'])[1:]
 
-    a_vec_list = forwardPropagate(trainingSet)
-    a_vec_list.insert(0, "dummy") # insert dummy variable to make it match coursera
+        #compute delta l-1 => 2
+        for l in range(L-1, 1, -1): #for one hidden layer, only does one iteration lolz
+            curr_theta = thetas[l-1].transpose() # use l-1 instead of l because thetas is 0 indexed
+            predelta = curr_theta * delta_list[l+1]
+            curr_delta = np.multiply(predelta, a_vec_list[l])
+            complement_a = np.subtract(1, a_vec_list[l])
+            curr_delta = np.multiply(curr_delta, complement_a)
+            delta_list[l] = curr_delta[1:] # we ignore bias unit in delta vectors
 
-    delta_list = []
+        a_1_transpose = a_vec_list[1].transpose()
+        a_2_transpose = a_vec_list[2].transpose()
+        delta1 = delta1 + (delta_list[2] * a_1_transpose)
+        delta2 = delta2 + (delta_list[3] * a_2_transpose)
+    m = len(trainingSet)
+
+    # FINAL DELTA 1 CALCULATIONS
+    for i in range(NUM_NEURONS_PER_LAYER):
+        for j in range(NUM_FEATURES + 1):
+            if j == 0:
+                delta1[i][j] = (1/m) * (delta1[i][j])
+            else:
+                delta1[i][j] = (1/m) * (delta1[i][j] + LAMBDA * theta1[i][j])
+
+    # FINAL DELTA 1 CALCULATIONS
+    for i in range(20):
+        for j in range(NUM_NEURONS_PER_LAYER + 1):
+            if j == 0:
+                delta2[i][j] = (1/m) * (delta2[i][j])
+            else:
+                delta2[i][j] = (1/m) * (delta2[i][j] + LAMBDA * theta2[i][j])
+    return [delta1, delta2]
+
 
 def initializeThetas():
     theta_results = []
     theta1 = np.random.rand(NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1) # theta1 x input = (1209 x 2039) * (2039 x 1) = 1209 x 1 (plus 1 from forward propogate)
     theta1 = np.multiply(theta1, 2*EPSILON)
     theta1 = np.subtract(theta1, EPSILON)
+    theta1 = np.asmatrix(theta1)
 
     theta2 = np.random.rand(20, NUM_NEURONS_PER_LAYER + 1) # theta2 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
     theta2 = np.multiply(theta2, 2*EPSILON)
     theta2 = np.subtract(theta2, EPSILON)
+    theta2 = np.asmatrix(theta2)
 
     return [theta1, theta2]
 
 
+def gradientChecking(thetas, gradients, results, answers):
+    epsilon = 1e-4
+    gradApprox[0,0]
+    for i in range(2):
+        thetaPlus = thetas.copy()
+        thetaPlus[i] = np.add(thetaPlus[i], epsilon)
+        thetaMinus = thetas.copy()
+        thetaMinus[i] = np.subtract(thetaMinus[i], epsilon)
+        gradApprox[i] = (costFunction(thetaPlus, results, answers, 2398, 20) - costFunction(thetaMinus, results, answers, 2398, 20))/(2*epsilon)
+
 def main():
     ingredients = getIngredients()
     cuisines = getCuisines()
-    trainingSet = formatTrainingSet(cuisines, ingredients)
+    trainingSet = formatTrainingSet(cuisines, ingredients)[:2]
     thetas = initializeThetas()
+    #gradients = backwardPropagate(trainingSet, thetas)
+    X = [x['input'] for x in trainingSet]
+    Y = [y['output'] for y in trainingSet]
+    results = [forwardPropagate(x, [thetas])[-1] for x in X]
+    print(results)
+    #gradientChecking(thetas, gradients, results, Y)
+
 
 if __name__ == '__main__':
     main()
