@@ -142,22 +142,24 @@ def backwardPropagate(trainingSet, thetas):
         delta1 = delta1 + (delta_list[2] * a_1_transpose)
         delta2 = delta2 + (delta_list[3] * a_2_transpose)
     m = len(trainingSet)
+    theta1 = thetas[0]
+    theta2 = thetas[1]
 
     # FINAL DELTA 1 CALCULATIONS
     for i in range(NUM_NEURONS_PER_LAYER):
         for j in range(NUM_FEATURES + 1):
             if j == 0:
-                delta1[i][j] = (1/m) * (delta1[i][j])
+                delta1[i, j] = (1/m) * (delta1[i, j])
             else:
-                delta1[i][j] = (1/m) * (delta1[i][j] + LAMBDA * theta1[i][j])
+                delta1[i, j] = (1/m) * (delta1[i, j] + LAMBDA * theta1[i, j])
 
-    # FINAL DELTA 1 CALCULATIONS
+    # FINAL DELTA 2 CALCULATIONS
     for i in range(20):
         for j in range(NUM_NEURONS_PER_LAYER + 1):
             if j == 0:
-                delta2[i][j] = (1/m) * (delta2[i][j])
+                delta2[i, j] = (1/m) * (delta2[i, j])
             else:
-                delta2[i][j] = (1/m) * (delta2[i][j] + LAMBDA * theta2[i][j])
+                delta2[i, j] = (1/m) * (delta2[i, j] + LAMBDA * theta2[i, j])
     return [delta1, delta2]
 
 
@@ -178,25 +180,44 @@ def initializeThetas():
 
 def gradientChecking(thetas, gradients, results, answers):
     epsilon = 1e-4
-    gradApprox[0,0]
-    for i in range(2):
-        thetaPlus = thetas.copy()
-        thetaPlus[i] = np.add(thetaPlus[i], epsilon)
-        thetaMinus = thetas.copy()
-        thetaMinus[i] = np.subtract(thetaMinus[i], epsilon)
-        gradApprox[i] = (costFunction(thetaPlus, results, answers, 2398, 20) - costFunction(thetaMinus, results, answers, 2398, 20))/(2*epsilon)
+    theta_1_flat = np.hstack(thetas[0].flat)
+    theta_2_flat = np.hstack(thetas[1].flat)
+    gradient_1_flat = np.hstack(gradients[0].flat)
+    gradient_2_flat = np.hstack(gradients[1].flat)
+    print(theta_1_flat)
+    print(theta_2_flat)
+    theta_flat = np.concatenate([theta_1_flat, theta_2_flat])
+    gradient_flat = np.concatenate([gradient_1_flat,gradient_2_flat])
+    n = len(theta_flat)
+
+    gradApprox = [0 for i in range(n)]
+
+    for idx in range(n):
+        thetaPlus = theta_flat.copy()
+        thetaPlus[idx] = np.add(thetaPlus[idx], epsilon)
+        thetaPlus_1 = thetaPlus[:len(theta_1_flat)]
+        thetaPlus_2 = thetaPlus[len(theta_1_flat):]
+        thetaPlus = [np.reshape(thetaPlus_1, thetas[0].shape), np.reshape(thetaPlus_2, thetas[1].shape)]
+        thetaMinus = theta_flat.copy()
+        thetaMinus[idx] = np.subtract(thetaMinus[idx], epsilon)
+        thetaMinus_1 = thetaMinus[:len(theta_1_flat)]
+        thetaMinus_2 = thetaMinus[len(theta_1_flat):]
+        thetaMinus = [np.reshape(thetaMinus_1, thetas[0].shape), np.reshape(thetaMinus_2, thetas[1].shape)]
+        gradApprox[idx] = (costFunction(thetaPlus, results, answers, 5, 20) - costFunction(thetaMinus, results, answers, 5, 20))/(2*epsilon)
+    for idx, grad in gradApprox:
+        if math.abs(grad - gradient_flat[idx]) > 1e-9:
+            print(str(grad) + "   " + str(gradient_flat[idx]))
 
 def main():
     ingredients = getIngredients()
     cuisines = getCuisines()
-    trainingSet = formatTrainingSet(cuisines, ingredients)[:2]
+    trainingSet = formatTrainingSet(cuisines, ingredients)[:5]
     thetas = initializeThetas()
-    #gradients = backwardPropagate(trainingSet, thetas)
+    gradients = backwardPropagate(trainingSet, thetas)
     X = [x['input'] for x in trainingSet]
     Y = [y['output'] for y in trainingSet]
-    results = [forwardPropagate(x, [thetas])[-1] for x in X]
-    print(results)
-    #gradientChecking(thetas, gradients, results, Y)
+    results = [forwardPropagate(x, thetas)[-1] for x in X]
+    gradientChecking(thetas, gradients, results, Y)
 
 
 if __name__ == '__main__':
