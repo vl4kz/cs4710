@@ -44,8 +44,8 @@ def costFunction(thetas, X, Y):
     # calculate cost Function
     doubleSum = 0
     tripleSum = 0
-    for i in range(1, m):
-        for k in range(1, K):
+    for i in range(m):
+        for k in range(1, K+1):
             y_curr = Y[i][k]
             h_curr = results[i][k]
             doubleSum += y_curr  * np.log(h_curr) + (1-y_curr) * np.log(1-h_curr)
