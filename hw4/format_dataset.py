@@ -7,7 +7,7 @@ from random import shuffle
 import time
 import json
 
-TOTAL_NUM_TRAINING_EXAMPLES = 100#1794
+TOTAL_NUM_TRAINING_EXAMPLES = 1794
 
 
 def getIngredients():
