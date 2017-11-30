@@ -9,9 +9,9 @@ import json
 import sys
 
 LAMBDA = 1
-NUM_HIDDEN_LAYERS = 1
+NUM_HIDDEN_LAYERS = 2
 NUM_FEATURES = 2398
-NUM_NEURONS_PER_LAYER = 1209
+NUM_NEURONS_PER_LAYER = 500 #1209
 EPSILON = 0.06987143837
 NUM_CLASSES = 20
 K = 6
@@ -92,7 +92,8 @@ def backwardPropagate(forward_prop_results, answers, thetas):
     Returns a matrix of deltas (for the cost function gradient descent)
     '''
     delta1 = np.zeros((NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1))
-    delta2 = np.zeros((NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1))
+    delta2 = np.zeros((NUM_NEURONS_PER_LAYER, NUM_NEURONS_PER_LAYER + 1))
+    delta3 = np.zeros((NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1))
 
     for idx in range(NUM_TRAINING_EXAMPLES):
         a_vec_list = forward_prop_results[idx]
@@ -112,11 +113,14 @@ def backwardPropagate(forward_prop_results, answers, thetas):
 
         a_1_transpose = a_vec_list[1].transpose()
         a_2_transpose = a_vec_list[2].transpose()
+        a_3_transpose = a_vec_list[3].transpose()
         delta1 = delta1 + (delta_list[2] * a_1_transpose)
         delta2 = delta2 + (delta_list[3] * a_2_transpose)
+        delta3 = delta3 + (delta_list[4] * a_3_transpose)
     m = NUM_TRAINING_EXAMPLES
     theta1 = thetas[0]
     theta2 = thetas[1]
+    theta3 = thetas[2]
 
     # FINAL DELTA 1 CALCULATIONS
     for i in range(NUM_NEURONS_PER_LAYER):
@@ -127,13 +131,21 @@ def backwardPropagate(forward_prop_results, answers, thetas):
                 delta1[i, j] = (1/m) * (delta1[i, j] + LAMBDA * theta1[i, j])
 
     # FINAL DELTA 2 CALCULATIONS
-    for i in range(NUM_CLASSES):
+    for i in range(NUM_NEURONS_PER_LAYER):
         for j in range(NUM_NEURONS_PER_LAYER + 1):
             if j == 0:
                 delta2[i, j] = (1/m) * (delta2[i, j])
             else:
                 delta2[i, j] = (1/m) * (delta2[i, j] + LAMBDA * theta2[i, j])
-    return [delta1, delta2]
+
+    # FINAL DELTA 3 CALCULATIONS
+    for i in range(NUM_CLASSES):
+        for j in range(NUM_NEURONS_PER_LAYER + 1):
+            if j == 0:
+                delta3[i, j] = (1/m) * (delta3[i, j])
+            else:
+                delta3[i, j] = (1/m) * (delta3[i, j] + LAMBDA * theta3[i, j])
+    return [delta1, delta2, delta3]
 
 
 def initializeThetas():
@@ -143,12 +155,17 @@ def initializeThetas():
     theta1 = np.subtract(theta1, EPSILON)
     theta1 = np.asmatrix(theta1)
 
-    theta2 = np.random.rand(NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1) # theta2 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
+    theta2 = np.random.rand(NUM_NEURONS_PER_LAYER, NUM_NEURONS_PER_LAYER + 1) # theta2 x input = (1209 x 2039) * (2039 x 1) = 1209 x 1 (plus 1 from forward propogate)
     theta2 = np.multiply(theta2, 2*EPSILON)
     theta2 = np.subtract(theta2, EPSILON)
     theta2 = np.asmatrix(theta2)
 
-    return [theta1, theta2]
+    theta3 = np.random.rand(NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1) # theta3 x activation = (20 x 1210) * (1210 x 1) = 20 x 1 (plus 1 from forward propogate)
+    theta3 = np.multiply(theta3, 2*EPSILON)
+    theta3 = np.subtract(theta3, EPSILON)
+    theta3 = np.asmatrix(theta3)
+
+    return [theta1, theta2, theta3]
 
 
 def gradientChecking(thetas, gradients, results, answers):
@@ -190,11 +207,16 @@ def unroll_matrices(matrix_list):
 
 def reshape_matrices(flat_matrix):
     theta_1_len = NUM_NEURONS_PER_LAYER * (NUM_FEATURES + 1)
+    theta_2_len = NUM_NEURONS_PER_LAYER * (NUM_NEURONS_PER_LAYER + 1)
+    theta_3_len = NUM_CLASSES * (NUM_NEURONS_PER_LAYER + 1)
     theta_1 = flat_matrix[:theta_1_len]
-    theta_2 = flat_matrix[theta_1_len:]
+    theta_2 = flat_matrix[theta_1_len:(theta_1_len + theta_2_len)]
+    theta_3 = flat_matrix[(theta_1_len + theta_2_len):]
     theta_1_shape = (NUM_NEURONS_PER_LAYER, NUM_FEATURES + 1)
-    theta_2_shape = (NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1)
-    return [np.asmatrix(np.reshape(theta_1, theta_1_shape)), np.asmatrix(np.reshape(theta_2, theta_2_shape))]
+    theta_2_shape = (NUM_NEURONS_PER_LAYER, NUM_NEURONS_PER_LAYER+1)
+    theta_3_shape = (NUM_CLASSES, NUM_NEURONS_PER_LAYER + 1)
+
+    return [np.asmatrix(np.reshape(theta_1, theta_1_shape)), np.asmatrix(np.reshape(theta_2, theta_2_shape)), np.asmatrix(np.reshape(theta_3, theta_3_shape))]
 
 
 def main():
