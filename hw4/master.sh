@@ -10,5 +10,6 @@ do
     )&
 done
 wait
+python3 average.py
 end=`date +%s`
 echo $((end-start))
