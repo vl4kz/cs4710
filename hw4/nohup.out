@@ -1,0 +1,42 @@
+master.sh: line 5: 16234 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters0.p'
+master.sh: line 5: 16236 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters1.p'
+master.sh: line 5: 16238 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters2.p'
+master.sh: line 5: 16240 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters3.p'
+master.sh: line 5: 16242 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters4.p'
+master.sh: line 5: 16243 Terminated: 15          python3 hw4_vl4kz_mzw7af.py $i
+Traceback (most recent call last):
+  File "predict.py", line 57, in <module>
+    main()
+  File "predict.py", line 40, in main
+    with open('parameters'+i+'.p', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'parameters5.p'
